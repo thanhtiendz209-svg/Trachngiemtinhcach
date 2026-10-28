@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import test from "node:test";
+import test, { after } from "node:test";
 import {
   appNameFromHost,
-  createHeadInjector,
+  createHeadInjector as createWorkspaceHeadInjector,
   grokXCreatorHeadTags,
-  injectGrokPwaHead,
+  injectGrokPwaHead as injectWorkspaceGrokPwaHead,
   isDocumentPath,
   isInstallQuery,
   publicAppHost,
@@ -20,6 +20,35 @@ import {
 import { renderInstallPage } from "./grok-pwa-plugin.mjs";
 
 const TEMPLATE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const FIXTURE_ROOT = mkdtempSync(join(tmpdir(), "grok-pwa-tests-"));
+const EMPTY_ROOT = join(FIXTURE_ROOT, "empty");
+mkdirSync(EMPTY_ROOT);
+after(() => rmSync(FIXTURE_ROOT, { recursive: true, force: true }));
+
+// Unit scenarios must not inherit the app's real site.json or public/og.jpg.
+// Tests exercising filesystem identity still supply their own explicit cwd.
+function injectGrokPwaHead(html, ctx = {}) {
+  return injectWorkspaceGrokPwaHead(html, { ...ctx, cwd: ctx.cwd ?? EMPTY_ROOT });
+}
+
+function createHeadInjector(ctx = {}) {
+  return createWorkspaceHeadInjector({ ...ctx, cwd: ctx.cwd ?? EMPTY_ROOT });
+}
+
+test("an explicit workspace identity wins over document and host fallbacks", () => {
+  const root = join(FIXTURE_ROOT, "branded-workspace");
+  mkdirSync(join(root, "src/lib/og"), { recursive: true });
+  mkdirSync(join(root, "public"));
+  writeFileSync(join(root, "src/lib/og/site.json"), JSON.stringify({ title: "Fixture App" }));
+  writeFileSync(join(root, "public/og.jpg"), "fixture-card");
+  const out = injectWorkspaceGrokPwaHead("<html><head><title>Document fallback</title></head></html>", {
+    cwd: root,
+    host: "wild-race.grok.me",
+  });
+  assert.match(out, /property="og:title" content="Fixture App"/);
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /grok-app-builder\/extensions\.js/);
+});
 
 test("injects before </head>", () => {
   const out = injectGrokPwaHead("<html><head><title>x</title></head><body></body></html>");
@@ -538,4 +567,5 @@ test("vite plugin bakes og identity as a virtual module", () => {
   assert.match(plugin, /virtual:grok-og-identity/);
   assert.match(plugin, /snapshotOgIdentity/);
 });
+
 

@@ -47,8 +47,14 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
       - name: Run existing and regression unit tests
+        continue-on-error: ${{ matrix.revision == 'baseline' }}
         working-directory: /workspace
-        run: npm test
+        run: |
+          set +e
+          npm test >screenshots/unit-tests.log 2>&1
+          test_status=$?
+          cat screenshots/unit-tests.log
+          exit "$test_status"
       - name: Check types and production build
         working-directory: /workspace
         run: |
