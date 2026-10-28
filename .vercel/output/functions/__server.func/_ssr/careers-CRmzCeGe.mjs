@@ -1,0 +1,381 @@
+import { C as HeartPulse, O as Cpu, T as FlaskConical, _ as Megaphone, b as Landmark, h as PenTool, i as Wallet, o as Truck, r as Wrench, w as GraduationCap } from "../_libs/lucide-react.mjs";
+import { d as riasecFitPercent } from "./riasec-BIz0WNyr.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/careers-CRmzCeGe.js
+var CAREER_ICONS = {
+	cpu: Cpu,
+	pen: PenTool,
+	megaphone: Megaphone,
+	coins: Wallet,
+	wrench: Wrench,
+	graduation: GraduationCap,
+	heartPulse: HeartPulse,
+	truck: Truck,
+	building: Landmark,
+	flask: FlaskConical
+};
+var CAREERS = [
+	{
+		id: "it",
+		name: "Công nghệ thông tin",
+		description: "Xây sản phẩm số, hệ thống, dữ liệu — nơi logic gặp giải quyết vấn đề.",
+		riasec: [
+			"I",
+			"R",
+			"C"
+		],
+		types: [
+			"INTJ",
+			"INTP",
+			"ISTJ",
+			"ISTP",
+			"ENTJ",
+			"ENTP"
+		],
+		icon: "cpu",
+		roles: [
+			"Lập trình viên",
+			"Phân tích dữ liệu",
+			"Kỹ sư hệ thống",
+			"Kiểm thử",
+			"Sản phẩm số"
+		],
+		skills: [
+			"Tư duy hệ thống",
+			"Học công cụ mới",
+			"Đọc lỗi",
+			"Làm việc với yêu cầu mơ hồ"
+		],
+		study: "CNTT, khoa học máy tính, toán tin, hoặc lộ trình tự học có portfolio.",
+		environment: "Được sâu với bài toán, ít họp vô ích, có đồng đội để review.",
+		note: "IT rộng. Hãy thử một nhánh (web, dữ liệu, hệ thống) trước khi gọi là ‘không hợp’."
+	},
+	{
+		id: "design",
+		name: "Thiết kế",
+		description: "Tạo trải nghiệm nhìn thấy được: giao diện, thương hiệu, không gian, sản phẩm.",
+		riasec: ["A", "R"],
+		types: [
+			"ISFP",
+			"INFP",
+			"ENFP",
+			"INFJ",
+			"ISFJ",
+			"ESFP"
+		],
+		icon: "pen",
+		roles: [
+			"UI/UX",
+			"Thiết kế đồ họa",
+			"Thương hiệu",
+			"Nội thất",
+			"Thiết kế sản phẩm"
+		],
+		skills: [
+			"Mắt thẩm mỹ",
+			"Lắng nghe người dùng",
+			"Kể chuyện bằng hình",
+			"Lặp bản nháp"
+		],
+		study: "Thiết kế, mỹ thuật ứng dụng, kiến trúc, hoặc bootcamp UX kèm portfolio.",
+		environment: "Tự do tạo, góp ý thẳng nhưng tử tế, deadline rõ.",
+		note: "Thiết kế không chỉ ‘vẽ đẹp’ — là giải quyết việc cho người thật."
+	},
+	{
+		id: "marketing",
+		name: "Marketing",
+		description: "Kể chuyện thương hiệu, hiểu người dùng, thử nghiệm thông điệp.",
+		riasec: [
+			"E",
+			"A",
+			"S"
+		],
+		types: [
+			"ENFP",
+			"ENTP",
+			"ESFP",
+			"ENFJ",
+			"ESFJ",
+			"INFP"
+		],
+		icon: "megaphone",
+		roles: [
+			"Content",
+			"Brand",
+			"Performance",
+			"Community",
+			"Nghiên cứu thị trường"
+		],
+		skills: [
+			"Viết",
+			"Đọc insight",
+			"Thử nghiệm",
+			"Làm việc với số và câu chuyện"
+		],
+		study: "Marketing, truyền thông, kinh tế, hoặc làm chiến dịch thật từ sớm.",
+		environment: "Nhịp nhanh, được thử, đo được kết quả, không chỉ ‘ý hay’.",
+		note: "Marketing dễ bị gọi là ồn. Chọn nhánh (nội dung, số, thương hiệu) cho vừa tính cách."
+	},
+	{
+		id: "econ",
+		name: "Kinh tế",
+		description: "Đọc dòng tiền, thị trường, quyết định phân bổ nguồn lực.",
+		riasec: [
+			"E",
+			"C",
+			"I"
+		],
+		types: [
+			"ENTJ",
+			"ESTJ",
+			"INTJ",
+			"ISTJ",
+			"ENTP",
+			"ESTP"
+		],
+		icon: "coins",
+		roles: [
+			"Phân tích tài chính",
+			"Ngân hàng",
+			"Đầu tư",
+			"Kinh tế học ứng dụng",
+			"Bảo hiểm"
+		],
+		skills: [
+			"Đọc số",
+			"Mô hình",
+			"Ra quyết trong bất định",
+			"Viết ngắn gọn"
+		],
+		study: "Kinh tế, tài chính, kế toán, toán ứng dụng.",
+		environment: "Mốc rõ, dữ liệu tốt, trách nhiệm tương xứng quyền.",
+		note: "Kinh tế không chỉ ‘làm giàu’ — là đọc hệ thống phân bổ."
+	},
+	{
+		id: "engineering",
+		name: "Kỹ thuật",
+		description: "Thiết kế và vận hành thứ hữu hình: máy, nhà, năng lượng, hạ tầng.",
+		riasec: [
+			"R",
+			"I",
+			"C"
+		],
+		types: [
+			"ISTP",
+			"ISTJ",
+			"INTJ",
+			"INTP",
+			"ESTP",
+			"ESTJ"
+		],
+		icon: "wrench",
+		roles: [
+			"Cơ khí",
+			"Điện – điện tử",
+			"Xây dựng",
+			"Tự động hóa",
+			"Năng lượng"
+		],
+		skills: [
+			"Hình dung không gian",
+			"An toàn",
+			"Tính toán",
+			"Làm việc hiện trường"
+		],
+		study: "Các ngành kỹ thuật, thực tập xưởng / công trình từ năm giữa.",
+		environment: "Tiêu chuẩn rõ, dụng cụ tốt, được làm ra thứ chạy được.",
+		note: "Kỹ thuật hợp người thích ‘nó chạy’. Lý thuyết chỉ là bản đồ."
+	},
+	{
+		id: "education",
+		name: "Giáo dục",
+		description: "Khai mở người khác — lớp học, thiết kế học liệu, đồng hành học tập.",
+		riasec: ["S", "A"],
+		types: [
+			"ENFJ",
+			"INFJ",
+			"ESFJ",
+			"ISFJ",
+			"ENFP",
+			"INFP"
+		],
+		icon: "graduation",
+		roles: [
+			"Giáo viên",
+			"Thiết kế học liệu",
+			"Tư vấn học đường",
+			"Đào tạo doanh nghiệp",
+			"Edtech"
+		],
+		skills: [
+			"Giải thích đời thường",
+			"Kiên nhẫn",
+			"Đọc khí lớp",
+			"Thiết kế hoạt động"
+		],
+		study: "Sư phạm, tâm lý giáo dục, hoặc chuyên môn + chứng chỉ giảng dạy.",
+		environment: "Sứ mệnh rõ, được chuẩn bị, không bị đo chỉ bằng điểm số lạnh.",
+		note: "Dạy là nghề bền sức. Giữ ranh và chỗ thở."
+	},
+	{
+		id: "health",
+		name: "Y tế",
+		description: "Chăm sóc sức khỏe với sự chính xác, hiện diện và trách nhiệm.",
+		riasec: [
+			"S",
+			"I",
+			"R"
+		],
+		types: [
+			"ISFJ",
+			"ESFJ",
+			"INFJ",
+			"ISTJ",
+			"ISFP",
+			"ENFJ"
+		],
+		icon: "heartPulse",
+		roles: [
+			"Điều dưỡng",
+			"Bác sĩ",
+			"Kỹ thuật viên",
+			"Y tế cộng đồng",
+			"Dược"
+		],
+		skills: [
+			"Chịu được việc khó",
+			"Chính xác",
+			"Hiện diện với người",
+			"Học dài"
+		],
+		study: "Y, dược, điều dưỡng — lộ trình dài, cần thử hiện trường sớm.",
+		environment: "Quy trình an toàn, đồng đội tin, được nghỉ thật sự sau ca.",
+		note: "Y tế không chỉ ‘cứu người’. Hãy xem ca trực trước khi quyết."
+	},
+	{
+		id: "logistics",
+		name: "Logistics",
+		description: "Luồng hàng, thời hạn, tối ưu vận hành — việc chạy vì có người giữ nhịp.",
+		riasec: [
+			"C",
+			"R",
+			"E"
+		],
+		types: [
+			"ESTJ",
+			"ISTJ",
+			"ESTP",
+			"ENTJ",
+			"ISFJ",
+			"ISTP"
+		],
+		icon: "truck",
+		roles: [
+			"Chuỗi cung ứng",
+			"Kho vận",
+			"Xuất nhập khẩu",
+			"Vận tải",
+			"Thu mua"
+		],
+		skills: [
+			"Nhịp thời hạn",
+			"Tối ưu luồng",
+			"Xử lý sự cố",
+			"Làm việc với số và người"
+		],
+		study: "Logistics, quản trị, ngoại thương, hoặc vào kho / forwarder thực tập.",
+		environment: "Hạn rõ, thông tin kịp, được quyền xử lý khi hàng kẹt.",
+		note: "Logistics hợp người thích hệ thống chuyển động, không thích bàn giấy tĩnh."
+	},
+	{
+		id: "business",
+		name: "Quản trị",
+		description: "Tổ chức người và việc, ra quyết định, giữ nhịp tổ chức.",
+		riasec: [
+			"E",
+			"C",
+			"S"
+		],
+		types: [
+			"ENTJ",
+			"ESTJ",
+			"ENFJ",
+			"ENTP",
+			"ESFJ",
+			"INTJ"
+		],
+		icon: "building",
+		roles: [
+			"Quản lý dự án",
+			"Vận hành",
+			"Nhân sự",
+			"Khởi nghiệp",
+			"Tư vấn"
+		],
+		skills: [
+			"Ưu tiên",
+			"Giao việc",
+			"Đàm phán",
+			"Giữ nhịp nhóm"
+		],
+		study: "QTKD, quản lý, luật, hoặc dẫn một dự án thật từ sớm.",
+		environment: "Mục tiêu đo được, quyền tương xứng trách nhiệm.",
+		note: "Quản trị không phải ‘làm sếp’. Là chịu trách nhiệm khi việc chưa chạy."
+	},
+	{
+		id: "science",
+		name: "Khoa học",
+		description: "Hỏi, đo, kiểm chứng — kiên nhẫn với sự chưa biết.",
+		riasec: [
+			"I",
+			"R",
+			"A"
+		],
+		types: [
+			"INTP",
+			"INTJ",
+			"INFJ",
+			"ISTP",
+			"INFP",
+			"ENTP"
+		],
+		icon: "flask",
+		roles: [
+			"Nghiên cứu",
+			"Lab",
+			"Khoa học môi trường",
+			"Toán ứng dụng",
+			"Khoa học xã hội"
+		],
+		skills: [
+			"Thiết kế thí nghiệm",
+			"Đọc paper",
+			"Kiên nhẫn âm tính",
+			"Viết rõ"
+		],
+		study: "Các ngành khoa học tự nhiên / xã hội, thực tập lab hoặc đề tài từ năm giữa.",
+		environment: "Được hỏi, được sai, ít bị ép chốt sớm chỉ để báo cáo.",
+		note: "Khoa học chậm. Hợp người chịu được ‘chưa ra’ lâu hơn bạn bè."
+	}
+];
+var CAREER_MAP = Object.fromEntries(CAREERS.map((c) => [c.id, c]));
+function getCareer(id) {
+	return CAREER_MAP[id];
+}
+function careerMatch(career, mbti, riasecCode, riasecScores) {
+	if (riasecScores) {
+		const fit = riasecFitPercent(riasecScores, career.riasec);
+		let bonus = 0;
+		if (mbti && career.types.includes(mbti)) bonus += 4;
+		return Math.min(96, Math.max(8, fit + bonus));
+	}
+	let score = 42;
+	if (mbti && career.types.includes(mbti)) score += 28;
+	if (riasecCode) {
+		const letters = riasecCode.split("");
+		const overlap = career.riasec.filter((x) => letters.includes(x)).length;
+		score += overlap * 10;
+	}
+	return Math.min(94, Math.max(38, score));
+}
+//#endregion
+export { getCareer as i, CAREER_ICONS as n, careerMatch as r, CAREERS as t };

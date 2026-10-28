@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Lumina",
+      "hasCanvas": false,
+      "bodyTextLen": 7555,
+      "bodyTextHash": "905ff4fac3846ba26dc9e0cdee69b8253c6320e16172d8b745132e47f7d6d994",
+      "bodyTextPrefix": "Lumina HƯỚNG NGHIỆP Trang chủ Trắc nghiệm Nhóm tính cách Hướng n",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Lumina",
+      "hasCanvas": false,
+      "bodyTextLen": 7555,
+      "bodyTextHash": "905ff4fac3846ba26dc9e0cdee69b8253c6320e16172d8b745132e47f7d6d994",
+      "bodyTextPrefix": "Lumina HƯỚNG NGHIỆP Trang chủ Trắc nghiệm Nhóm tính cách Hướng n",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

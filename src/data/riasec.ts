@@ -1,0 +1,127 @@
+import type { RiasecType } from "./types";
+
+export const RIASEC_TYPES: RiasecType[] = [
+  {
+    id: "R",
+    name: "Thực tế",
+    slogan: "Làm bằng tay, hiểu bằng việc.",
+    summary: "Thích thao tác, máy móc, ngoài trời, kết quả sờ được.",
+    description:
+      "Nhóm Thực tế thích việc có sản phẩm nhìn thấy được: sửa, lắp, chế, vận hành. Bạn yên hơn khi tay đang làm và đầu đang hiểu cơ chế, hơn là ngồi bàn luận vòng.",
+    image: "/riasec/R.webp",
+    highlights: ["Tay nghề", "Kết quả hữu hình", "Độc lập thao tác", "Hiện trường"],
+    thinking: "Bạn nghĩ bằng việc: tháo ra, thử, chỉnh, xem nó chạy. Lý thuyết chỉ đáng giá khi giải thích được thứ đang cầm.",
+    interacting: "Ít lời, đúng việc. Tôn trọng người làm được. Ngại họp dài không ra quyết định.",
+    deciding: "Chốt theo cái gì chạy được hôm nay. Ít bị cuốn bởi khẩu hiệu.",
+    learning: "Học tại xưởng, lab, hiện trường. Làm mẫu rồi tinh — hơn là slide.",
+    strengths: ["Giải quyết sự cố tại chỗ", "Kiên nhẫn với vật liệu và máy", "Ít phô trương", "Chịu được việc tay"],
+    improvements: ["Diễn đạt ý cho người không chuyên", "Nhìn hệ quả dài hơn một nhịp", "Chấp nhận họp khi nó thật sự chốt việc"],
+    careers: ["Kỹ thuật", "Cơ khí", "Nông nghiệp công nghệ", "Xây dựng", "Vận hành sản xuất"],
+    environment: "Dụng cụ tốt, ít họp vô ích, được làm ra thứ sờ được.",
+    note: "Tay nghề là tài sản. Hãy để người khác thấy cả cách bạn nghĩ, không chỉ sản phẩm.",
+  },
+  {
+    id: "I",
+    name: "Nghiên cứu",
+    slogan: "Hỏi đến khi ra bản chất.",
+    summary: "Thích phân tích, thí nghiệm, dữ liệu và câu hỏi khó.",
+    description:
+      "Nhóm Nghiên cứu sống với câu hỏi. Bạn chịu được sự chưa biết, thích đào cơ chế, và khó chịu khi bị ép chốt sớm chỉ để cho có tiến độ.",
+    image: "/riasec/I.webp",
+    highlights: ["Tò mò", "Phân tích", "Độc lập trí tuệ", "Sâu"],
+    thinking: "Chạy giả thuyết, kiểm chứng, sửa mô hình. Kết luận đến sau bằng chứng.",
+    interacting: "Thoải mái với người chịu được im lặng và câu hỏi lạ. Ngại small talk.",
+    deciding: "Muốn thêm dữ liệu. Có thể trì hoãn việc thực tế nếu còn lỗ hổng.",
+    learning: "Đọc, thí nghiệm, tranh luận ý tưởng. Ghét học vẹt.",
+    strengths: ["Phát hiện lỗ hổng", "Học khái niệm trừu tượng nhanh", "Trung thực trí tuệ", "Bền với bài toán khó"],
+    improvements: ["Chốt một phiên bản để ra đời", "Giải thích ngắn cho người không chuyên", "Đừng để hoàn hảo chặn tiến độ"],
+    careers: ["Nghiên cứu", "Khoa học dữ liệu", "Lập trình", "Y sinh", "Phân tích chính sách"],
+    environment: "Tự do đào sâu, ít micro-manage, được phép thử và sai.",
+    note: "Óc hỏi là tài sản. Hãy chọn một câu và đưa câu trả lời ra thế giới thật.",
+  },
+  {
+    id: "A",
+    name: "Nghệ thuật/Sáng tạo",
+    slogan: "Tạo thứ chưa từng có.",
+    summary: "Thích biểu đạt, hình ảnh, ngôn ngữ, không gian tự do.",
+    description:
+      "Nhóm Nghệ thuật muốn ngày làm việc có chỗ cho giọng riêng. Bạn nhạy với cái đẹp, không khí, và khó chịu khi bị ép vào khuôn không còn chỗ cho cá tính.",
+    image: "/riasec/A.webp",
+    highlights: ["Biểu đạt", "Thẩm mỹ", "Độc đáo", "Cảm xúc"],
+    thinking: "Nghĩ bằng hình, nhịp, câu chuyện. Ý phải ‘đúng cảm’ chứ không chỉ đúng checklist.",
+    interacting: "Mở với người tôn trọng giọng mình. Dễ tắt khi bị chê giữa đám đông.",
+    deciding: "Theo trực giác thẩm mỹ, rồi mới bọc bằng lý lẽ. Cần mốc nhỏ để không trôi.",
+    learning: "Làm mẫu, portfolio, studio. Lý thuyết khô làm bạn tắt.",
+    strengths: ["Tạo trải nghiệm đáng nhớ", "Nhìn ra giọng riêng", "Kết nối cảm xúc", "Ứng biến hình ảnh"],
+    improvements: ["Khung thời gian cho việc nhàm", "Nghe góp ý không chỉ nghe tông", "Hoàn tất, không chỉ khởi"],
+    careers: ["Thiết kế", "Nội dung", "Kiến trúc", "Truyền thông sáng tạo", "Sân khấu"],
+    environment: "Tự do tạo, đồng đội hiểu thẩm mỹ, ít quy trình cứng.",
+    note: "Giọng riêng cần kỷ luật nhỏ. Một khung sẽ giúp ý đi được ra đời.",
+  },
+  {
+    id: "S",
+    name: "Xã hội",
+    slogan: "Người là trung tâm của việc.",
+    summary: "Thích dạy, hỗ trợ, chăm sóc, làm việc vì con người.",
+    description:
+      "Nhóm Xã hội thấy việc có nghĩa khi có người cụ thể ở đầu kia. Bạn lắng nghe được, muốn người khác ổn hơn, và kiệt nếu chỉ làm với máy suốt tuần.",
+    image: "/riasec/S.webp",
+    highlights: ["Lắng nghe", "Đồng hành", "Chăm sóc", "Khai mở"],
+    thinking: "Đặt người vào giữa bài toán. Hỏi ‘ai cần gì’ trước ‘việc chạy sao’.",
+    interacting: "Ấm, kiên nhẫn, hay đứng về phía người yếu hơn trong phòng.",
+    deciding: "Cân tác động tới người. Có thể chậm chốt nếu sợ làm tổn.",
+    learning: "Thực hành với người, case, phản hồi. Học một mình khô sẽ chán.",
+    strengths: ["Tạo an toàn tâm lý", "Dạy và giải thích đời thường", "Đọc khí phòng", "Bền với việc chăm"],
+    improvements: ["Giữ ranh để không kiệt", "Nói không khi việc vượt sức", "Đo kết quả, không chỉ đo nhiệt tình"],
+    careers: ["Giáo dục", "Tâm lý", "Y tế", "Công tác xã hội", "Nhân sự"],
+    environment: "Sứ mệnh rõ, đồng đội ấm, được gặp người, không chỉ KPI lạnh.",
+    note: "Bạn nâng người khác. Hãy nhớ nâng cả chính mình.",
+  },
+  {
+    id: "E",
+    name: "Dẫn dắt/Quản lý",
+    slogan: "Ảnh hưởng và chốt việc.",
+    summary: "Thích thuyết phục, kinh doanh, điều phối, mục tiêu.",
+    description:
+      "Nhóm Dẫn dắt muốn việc có đích, có cuộc chơi, có người đi cùng. Bạn thích thuyết phục, chốt, và thấy năng lượng dâng khi phòng bắt đầu chuyển.",
+    image: "/riasec/E.webp",
+    highlights: ["Thuyết phục", "Mục tiêu", "Điều phối", "Quyết"],
+    thinking: "Nghĩ theo đòn bẩy: cái gì ra kết quả, ai cần được kéo, việc nào bỏ.",
+    interacting: "Nhanh, thẳng, kỳ vọng rõ. Tôn trọng người làm được việc.",
+    deciding: "Chốt khi đủ thông tin then chốt. Chấp nhận rủi ro tính được.",
+    learning: "Case, mô phỏng, phản hồi thẳng. Học để dùng được ngay.",
+    strengths: ["Kéo nhóm khỏi trì trệ", "Nhìn nút thắt", "Truyền tiến độ", "Đàm phán"],
+    improvements: ["Lắng nghe người chậm hơn", "Chừa chỗ cho nhịp sâu", "Không biến mọi cuộc nói thành cuộc chốt"],
+    careers: ["Kinh doanh", "Quản lý", "Startup", "Luật", "Marketing"],
+    environment: "Mục tiêu đo được, quyền quyết tương xứng, đội có năng lực.",
+    note: "Bạn giỏi đưa mọi người đi. Hãy chắc họ cũng muốn đi cùng.",
+  },
+  {
+    id: "C",
+    name: "Vận hành/Quy củ",
+    slogan: "Hệ thống chạy vì có bạn.",
+    summary: "Thích quy trình, dữ liệu có cấu trúc, trật tự, chính xác.",
+    description:
+      "Nhóm Vận hành yên khi mọi thứ có chỗ. Bạn thích checklist, mốc, tiêu chuẩn, và khó chịu với sự mơ hồ được gọi là ‘linh hoạt’.",
+    image: "/riasec/C.webp",
+    highlights: ["Trật tự", "Chính xác", "Quy trình", "Đáng tin"],
+    thinking: "Xếp thông tin vào khung. Sai số, hạn, giấy tờ không phải chuyện nhỏ.",
+    interacting: "Đúng hẹn, đúng lời. Ít improvises giữa chừng nếu chưa sửa kế hoạch.",
+    deciding: "Theo tiêu chuẩn và tiền lệ tốt. Ngại phá cách không có lý do.",
+    learning: "Quy trình, mẫu, bài tập có đáp án rõ. Hỗn độn làm bạn tốn năng lượng.",
+    strengths: ["Giữ hệ thống êm", "Phát hiện sai sót sớm", "Đáng tin ở việc nhỏ", "Tối ưu luồng"],
+    improvements: ["Chấp nhận phiên bản đủ dùng", "Không ôm hết kiểm soát", "Chừa chỗ cho ý mới"],
+    careers: ["Kế toán", "Logistics", "Hành chính", "Phân tích vận hành", "Quản trị dữ liệu"],
+    environment: "Tiêu chuẩn rõ, hạn rõ, ít đổi hướng đột ngột không báo.",
+    note: "Trật tự là món quà. Hãy dùng nó để mở đường, không phải để đóng cửa ý mới.",
+  },
+];
+
+export const RIASEC_MAP = Object.fromEntries(RIASEC_TYPES.map((t) => [t.id, t])) as Record<
+  string,
+  RiasecType
+>;
+
+export function getRiasec(id: string) {
+  return RIASEC_MAP[id.toUpperCase()];
+}
