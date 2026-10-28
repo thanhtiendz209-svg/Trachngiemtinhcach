@@ -34,10 +34,12 @@ jobs:
           sudo chown "$USER":"$USER" /workspace
           cp -a "$GITHUB_WORKSPACE"/. /workspace/
           cd /workspace
+          rm -rf screenshots
           mkdir -p screenshots
           if [ "$REVISION" = baseline ]; then
             git fetch --no-tags --depth=1 origin "$VALIDATION_COMMIT"
             git show "$VALIDATION_COMMIT:scripts/site-regression.mjs" > scripts/site-regression.mjs
+            git show "$VALIDATION_COMMIT:.npmrc" > .npmrc
           fi
       - name: Install dependencies and browser
         working-directory: /workspace
