@@ -11,21 +11,24 @@ const FLOAT = ["INFP", "ENTJ", "ISFJ", "ESTP", "INTJ", "ENFP"];
 
 export function AnalysisScreen({ onDone }: { onDone: () => void }) {
   const [pct, setPct] = useState(0);
-  const [line, setLine] = useState(0);
+  const line = Math.min(3, Math.floor(pct / 25));
 
   useEffect(() => {
     const t0 = Date.now();
     const total = 4200;
+    let completionTimeout = 0;
     const id = window.setInterval(() => {
       const p = Math.min(100, Math.round(((Date.now() - t0) / total) * 100));
       setPct(p);
-      setLine(Math.min(3, Math.floor(p / 25)));
       if (p >= 100) {
         window.clearInterval(id);
-        window.setTimeout(onDone, 280);
+        completionTimeout = window.setTimeout(onDone, 280);
       }
     }, 50);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(completionTimeout);
+    };
   }, [onDone]);
 
   return (
@@ -39,7 +42,7 @@ export function AnalysisScreen({ onDone }: { onDone: () => void }) {
             cy="48"
             r="40"
             fill="none"
-            className="stroke-cyan"
+            className="stroke-cyan transition-[stroke-dashoffset] duration-100 ease-linear motion-reduce:transition-none"
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 40}
@@ -68,3 +71,4 @@ export function AnalysisScreen({ onDone }: { onDone: () => void }) {
     </div>
   );
 }
+

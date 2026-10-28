@@ -62,22 +62,24 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
 
   const q = questions[index];
   const selected = answers[index] ?? -1;
-  const pct = Math.round((answers.filter((a) => a >= 0).length / questions.length) * 100);
+  const answeredCount = useMemo(() => answers.filter((a) => a >= 0).length, [answers]);
+  const pct = Math.round((answeredCount / questions.length) * 100);
   const last = index === questions.length - 1;
-  const answeredCount = answers.filter((a) => a >= 0).length;
 
   const go = useCallback((nextIndex: number, d: "next" | "back") => {
     window.clearTimeout(autoRef.current);
+    indexRef.current = nextIndex;
     setDir(d);
     setAnimKey((k) => k + 1);
     setIndex(nextIndex);
     setError("");
   }, []);
 
-  const choose = (optIndex: number) => {
+  const choose = useCallback((optIndex: number) => {
     setError("");
     const i = indexRef.current;
     setAnswers((prev) => {
+      if (prev[i] === optIndex) return prev;
       const next = [...prev];
       next[i] = optIndex;
       return next;
@@ -87,9 +89,9 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
     autoRef.current = window.setTimeout(() => {
       go(i + 1, "next");
     }, 420);
-  };
+  }, [go, questions.length]);
 
-  const continueNext = () => {
+  const continueNext = useCallback(() => {
     window.clearTimeout(autoRef.current);
     if ((answers[index] ?? -1) < 0) {
       setError("Hãy chọn một đáp án trước khi tiếp tục.");
@@ -100,7 +102,7 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
       return;
     }
     go(index + 1, "next");
-  };
+  }, [answers, go, index, last]);
 
   const finish = useCallback(() => {
     const result = scoreQuiz(quiz.id, answers);
@@ -125,9 +127,14 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
       const n = Number(e.key);
-      if (n >= 1 && n <= 9 && q && n <= q.options.length) {
+      const isAnswerKey = n >= 1 && n <= 9 && q && n <= q.options.length;
+      if (e.repeat) {
+        if (isAnswerKey || ["Enter", "ArrowRight", "ArrowLeft"].includes(e.key)) e.preventDefault();
+        return;
+      }
+      if (isAnswerKey) {
         e.preventDefault();
         choose(n - 1);
       }
@@ -142,7 +149,7 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [choose, continueNext, go, phase, q]);
 
   if (!ready) {
     return (
@@ -294,9 +301,9 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-ice">
           <div
-            className="progress-bar h-full rounded-full bg-gradient-to-r from-azure to-cyan"
+            className="progress-bar h-full w-full rounded-full bg-gradient-to-r from-azure to-cyan"
             style={{
-              width: `${Math.max(6, ((index + (selected >= 0 ? 1 : 0)) / questions.length) * 100)}%`,
+              transform: `scaleX(${Math.max(0.06, (index + (selected >= 0 ? 1 : 0)) / questions.length)})`,
             }}
           />
         </div>
@@ -355,3 +362,4 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
     </div>
   );
 }
+

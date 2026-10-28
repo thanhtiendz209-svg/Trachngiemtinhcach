@@ -24,5 +24,6 @@ function QuizRoute() {
       </SiteShell>
     );
   }
-  return <QuizPlayer quiz={quiz} />;
+  return <QuizPlayer key={quiz.id} quiz={quiz} />;
 }
+

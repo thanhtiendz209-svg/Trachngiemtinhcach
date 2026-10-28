@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { ExternalLink, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { University } from "@/data/types";
@@ -30,7 +30,7 @@ export function UniversityLogo({ uni, className }: { uni: University; className?
   );
 }
 
-export function UniversityCard({
+export const UniversityCard = memo(function UniversityCard({
   uni,
   fit,
   suggestedMajors,
@@ -42,8 +42,11 @@ export function UniversityCard({
   const majors = suggestedMajors?.length ? suggestedMajors : uni.majors;
   const [openMajors, setOpenMajors] = useState(false);
   const shown = openMajors ? majors : majors.slice(0, 4);
-  const codes = new Map(uni.majorItems.map((item) => [item.name, item.code]));
-  const links = admissionHrefs(uni.admissionsText || uni.admissionsUrl);
+  const codes = useMemo(() => new Map(uni.majorItems.map((item) => [item.name, item.code])), [uni.majorItems]);
+  const links = useMemo(
+    () => admissionHrefs(uni.admissionsText || uni.admissionsUrl),
+    [uni.admissionsText, uni.admissionsUrl],
+  );
   const tuition = uni.tuition;
   const scores = uni.admissionScores;
 
@@ -147,4 +150,5 @@ export function UniversityCard({
       {fit != null ? <p className="mt-3 text-[11px] leading-relaxed text-muted">{FIT_NOTE}</p> : null}
     </article>
   );
-}
+});
+

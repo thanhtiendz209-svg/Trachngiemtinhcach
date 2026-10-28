@@ -26,7 +26,11 @@ function write(key: string, value: unknown) {
 
 function remove(key: string) {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(key);
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* Storage can be unavailable in private or restricted browser contexts. */
+  }
 }
 
 export function loadProgress(quizId: string) {
@@ -77,3 +81,4 @@ export function loadMergedProfile() {
   const bigfive = all.find((r) => r.kind === "bigfive")?.bigfive;
   return { all, mbti, axes, riasec, bigfive };
 }
+

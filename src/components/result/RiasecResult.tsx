@@ -12,9 +12,9 @@ import {
   RIASEC_DISCLAIMER,
   RIASEC_KEYS,
   UNIVERSITY_DISCLAIMER,
-  getRiasecCombination,
   rankRiasec,
 } from "@/lib/riasec";
+import { getRiasecCombination } from "@/lib/riasec-combination";
 
 export function RiasecResult({ riasec, showUniversity = true }: { riasec: RiasecScores; showUniversity?: boolean }) {
   const combo = getRiasecCombination(riasec.code);
@@ -210,3 +210,4 @@ export function RiasecResult({ riasec, showUniversity = true }: { riasec: Riasec
     </>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { MAJOR_GROUPS } from "@/data/majors";
@@ -9,6 +9,7 @@ import {
   FIT_BANDS,
   SCORE_BANDS,
   TUITION_BANDS,
+  createUniversitySearchIndex,
   rankUniversities,
   uniqueAdmissionMethods,
   universityMajorNames,
@@ -61,6 +62,7 @@ export function UniversityExplorer({
   compact?: boolean;
 }) {
   const [q, setQ] = useState("");
+  const deferredQuery = useDeferredValue(q);
   const [region, setRegion] = useState("Tất cả");
   const [provinceNew, setProvinceNew] = useState("Tất cả");
   const [provinceOld, setProvinceOld] = useState("Tất cả");
@@ -73,9 +75,15 @@ export function UniversityExplorer({
   const [open, setOpen] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
-  const hasTuition = UNIVERSITIES.some((u) => u.tuition);
-  const hasScores = UNIVERSITIES.some((u) => u.admissionScores.length > 0);
-  const methods = uniqueAdmissionMethods(UNIVERSITIES);
+  const { hasTuition, hasScores, methods } = useMemo(
+    () => ({
+      hasTuition: UNIVERSITIES.some((u) => u.tuition),
+      hasScores: UNIVERSITIES.some((u) => u.admissionScores.length > 0),
+      methods: uniqueAdmissionMethods(UNIVERSITIES),
+    }),
+    [],
+  );
+  const searchIndex = useMemo(() => createUniversitySearchIndex(UNIVERSITIES), []);
   const applyTuition = hasTuition && tuition !== "Tất cả";
   const applyScore = hasScores && score !== "Tất cả";
   const applyMethod = methods.length > 0 && method !== "Tất cả";
@@ -107,7 +115,8 @@ export function UniversityExplorer({
     () =>
       rankUniversities({
         universities: UNIVERSITIES,
-        query: q,
+        searchIndex,
+        query: deferredQuery,
         location: "Tất cả",
         region,
         provinceNew,
@@ -124,7 +133,7 @@ export function UniversityExplorer({
         applyScore,
         applyMethod,
       }),
-    [q, region, provinceNew, provinceOld, popularProvinces, tuition, fitMin, groupId, major, score, method, riasec, applyTuition, applyScore, applyMethod],
+    [deferredQuery, searchIndex, region, provinceNew, provinceOld, popularProvinces, tuition, fitMin, groupId, major, score, method, riasec, applyTuition, applyScore, applyMethod],
   );
 
   const pageSize = compact ? 6 : 12;
@@ -376,7 +385,7 @@ export function UniversityExplorer({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted" role="status" aria-live="polite">
               {ranked.length} trường khớp bộ lọc
             </p>
             <button
@@ -397,7 +406,7 @@ export function UniversityExplorer({
           Không có trường khớp bộ lọc. Thử nới khu vực hoặc xóa từ khóa.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2" aria-busy={q !== deferredQuery}>
           {visible.map(({ uni, fit, majors }) => (
             <UniversityCard key={uni.id} uni={uni} fit={fit} suggestedMajors={majors} />
           ))}
@@ -416,3 +425,4 @@ export function UniversityExplorer({
     </section>
   );
 }
+

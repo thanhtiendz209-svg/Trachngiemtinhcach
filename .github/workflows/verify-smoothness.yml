@@ -1,0 +1,99 @@
+name: Verify website smoothness and features
+
+on:
+  push:
+    branches: [optimize-smoothness]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [baseline, candidate]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ matrix.revision == 'baseline' && 'b98c766aa8c313b979c429300680370838aebeb3' || github.sha }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare isolated browser workspace
+        env:
+          VALIDATION_COMMIT: ${{ github.sha }}
+          REVISION: ${{ matrix.revision }}
+        run: |
+          sudo mkdir -p /workspace
+          sudo chown "$USER":"$USER" /workspace
+          cp -a "$GITHUB_WORKSPACE"/. /workspace/
+          cd /workspace
+          mkdir -p screenshots
+          if [ "$REVISION" = baseline ]; then
+            git fetch --no-tags --depth=1 origin "$VALIDATION_COMMIT"
+            git show "$VALIDATION_COMMIT:scripts/site-regression.mjs" > scripts/site-regression.mjs
+          fi
+      - name: Install dependencies and browser
+        working-directory: /workspace
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run existing and regression unit tests
+        working-directory: /workspace
+        run: npm test
+      - name: Check types and production build
+        working-directory: /workspace
+        run: |
+          npm run typecheck >screenshots/typecheck.log 2>&1 &
+          typecheck_pid=$!
+          npm run build >screenshots/build.log 2>&1 &
+          build_pid=$!
+          set +e
+          wait "$typecheck_pid"
+          typecheck_status=$?
+          wait "$build_pid"
+          build_status=$?
+          set -e
+          cat screenshots/typecheck.log
+          cat screenshots/build.log
+          test "$typecheck_status" -eq 0
+          test "$build_status" -eq 0
+      - name: Render development build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          sh startup.sh
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8080/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png
+      - name: Render production build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          npm run preview:restart
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/production.png --baseline /workspace/screenshots/dev.json
+          node --input-type=module -e 'import fs from "node:fs"; const v=JSON.parse(fs.readFileSync("screenshots/production.json", "utf8")); if(v.divergesFromBaseline) throw Error(v.baselineReasons.join("; "));'
+      - name: Exercise complete website flows and record measurements
+        working-directory: /workspace
+        env:
+          SITE_EXPECT_FIXES: ${{ matrix.revision == 'candidate' && '1' || '0' }}
+          SITE_REVISION: ${{ matrix.revision }}
+        run: node scripts/site-regression.mjs http://127.0.0.1:8081/
+      - name: Preserve browser screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-verification-${{ matrix.revision }}-${{ github.run_attempt }}
+          path: /workspace/screenshots/
+          if-no-files-found: warn

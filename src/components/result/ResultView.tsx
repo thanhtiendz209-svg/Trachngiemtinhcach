@@ -9,7 +9,7 @@ import { bigfiveBand, bigfiveCopy, BIGFIVE_TRAITS } from "@/data/bigfive";
 import { CAREERS, careerMatch } from "@/data/careers";
 import { getPersonality } from "@/data/personalities";
 import { getRiasec } from "@/data/riasec";
-import { getRiasecCombination } from "@/lib/riasec";
+import { getRiasecCombination } from "@/lib/riasec-combination";
 import type { QuizResult } from "@/data/types";
 import { resultSubtitle, resultTitle } from "@/lib/quiz-engine";
 import { AxisBars } from "./AxisBars";
@@ -284,3 +284,4 @@ export function ResultView({ result }: { result: QuizResult }) {
     </div>
   );
 }
+

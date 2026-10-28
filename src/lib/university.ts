@@ -18,6 +18,17 @@ export type TuitionBand = (typeof TUITION_BANDS)[number];
 export type FitBand = (typeof FIT_BANDS)[number];
 export type ScoreBand = (typeof SCORE_BANDS)[number];
 
+const vietnameseNames = new Intl.Collator("vi");
+
+function universitySearchText(uni: University) {
+  return `${uni.name} ${uni.shortName} ${uni.category} ${uni.location} ${uni.region} ${uni.provinceNew} ${uni.provinceOld} ${uni.majors.join(" ")} ${uni.majorItems.map((m) => m.code).join(" ")}`.toLowerCase();
+}
+
+/** Build once for an unchanged dataset, rather than normalizing every keystroke. */
+export function createUniversitySearchIndex(universities: readonly University[]): ReadonlyMap<University, string> {
+  return new Map(universities.map((uni) => [uni, universitySearchText(uni)]));
+}
+
 function hostnameOf(url: string) {
   try {
     return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
@@ -184,6 +195,7 @@ export interface RankedUniversity {
 
 export function rankUniversities(opts: {
   universities: University[];
+  searchIndex?: ReadonlyMap<University, string>;
   query: string;
   location: (typeof LOCATIONS)[number];
   region: string;
@@ -207,26 +219,13 @@ export function rankUniversities(opts: {
     opts.major !== "all"
       ? (MAJOR_GROUPS.find((g) => g.examples.includes(opts.major)) ?? group)
       : group;
-  const listed = new Set(opts.universities.flatMap((u) => u.majors));
+  const listed = opts.major !== "all" && opts.universities.some((u) => u.majors.includes(opts.major));
 
   return opts.universities
-    .map((uni) => {
-      const profile = majorGroup ? majorGroup.riasec : uni.focusRiasec;
-      const fit = opts.riasec
-        ? riasecFitPercent(opts.riasec.scores, profile, opts.riasec.maxScores)
-        : null;
-      const majors =
-        opts.major !== "all" && uni.majors.includes(opts.major)
-          ? [opts.major, ...uni.majors.filter((name) => name !== opts.major)]
-          : uni.majors;
-      return { uni, fit, majors };
-    })
-    .filter(({ uni, fit }) => {
+    .filter((uni) => {
       if (
         query &&
-        !`${uni.name} ${uni.shortName} ${uni.category} ${uni.location} ${uni.region} ${uni.provinceNew} ${uni.provinceOld} ${uni.majors.join(" ")} ${uni.majorItems.map((m) => m.code).join(" ")}`
-          .toLowerCase()
-          .includes(query)
+        !(opts.searchIndex?.get(uni) ?? universitySearchText(uni)).includes(query)
       ) {
         return false;
       }
@@ -238,30 +237,45 @@ export function rankUniversities(opts: {
         return false;
       }
       if (opts.provinceOld !== "Tất cả" && uni.provinceOld !== opts.provinceOld) return false;
-      if (opts.major !== "all" && listed.has(opts.major) && !uni.majors.includes(opts.major)) return false;
+      if (listed && !uni.majors.includes(opts.major)) return false;
       if (majorGroup && !matchesMajorGroup(uni, majorGroup.id)) return false;
       if (opts.applyTuition && !tuitionInBand(uni, opts.tuition)) return false;
       if (opts.applyScore && !scoreInBand(uni, opts.score)) return false;
       if (opts.applyMethod && opts.method !== "Tất cả") {
         if (!uni.admissionMethods.includes(opts.method)) return false;
       }
+      return true;
+    })
+    .map((uni) => {
+      const profile = majorGroup ? majorGroup.riasec : uni.focusRiasec;
+      const fit = opts.riasec
+        ? riasecFitPercent(opts.riasec.scores, profile, opts.riasec.maxScores)
+        : null;
+      const majors =
+        opts.major !== "all" && uni.majors.includes(opts.major)
+          ? [opts.major, ...uni.majors.filter((name) => name !== opts.major)]
+          : uni.majors;
+      return { uni, fit, majors };
+    })
+    .filter(({ fit }) => {
       if (opts.fitMin !== "Tất cả") {
         const min = fitMinValue(opts.fitMin);
         if (fit == null || fit < min) return false;
       }
       return true;
     })
-    .sort((a, b) => (b.fit ?? 0) - (a.fit ?? 0) || a.uni.name.localeCompare(b.uni.name, "vi"));
+    .sort((a, b) => (b.fit ?? 0) - (a.fit ?? 0) || vietnameseNames.compare(a.uni.name, b.uni.name));
 }
 
 export function uniqueAdmissionMethods(universities: University[]) {
-  return [...new Set(universities.flatMap((u) => u.admissionMethods))].sort((a, b) => a.localeCompare(b, "vi"));
+  return [...new Set(universities.flatMap((u) => u.admissionMethods))].sort(vietnameseNames.compare);
 }
 
 export function universityMajorNames(universities: University[]) {
-  return [...new Set(universities.flatMap((u) => u.majors))].sort((a, b) => a.localeCompare(b, "vi"));
+  return [...new Set(universities.flatMap((u) => u.majors))].sort(vietnameseNames.compare);
 }
 
 export function admissionHrefs(text: string) {
   return (text.match(/https?:\/\/[^\s,;]+/g) ?? []).map((href) => href.replace(/[).,;]+$/, ""));
 }
+

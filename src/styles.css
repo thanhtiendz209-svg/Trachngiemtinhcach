@@ -96,11 +96,9 @@
 .reveal {
   opacity: 0;
   transform: translateY(14px);
-  filter: blur(3px);
   transition:
     opacity var(--motion-slow) var(--ease-smooth-out),
-    transform var(--motion-slow) var(--ease-smooth-out),
-    filter var(--motion-slow) var(--ease-smooth-out);
+    transform var(--motion-slow) var(--ease-smooth-out);
 }
 .reveal.is-in {
   opacity: 1;
@@ -131,7 +129,7 @@
 
 .progress-bar {
   transform-origin: left center;
-  transition: width var(--motion-medium) var(--ease-smooth-out);
+  transition: transform var(--motion-medium) var(--ease-smooth-out);
 }
 
 .option-card {
@@ -319,6 +317,10 @@
   html {
     scroll-behavior: auto;
   }
+  .progress-bar,
+  .option-card {
+    transition: none;
+  }
   .reveal,
   .reveal.is-in {
     opacity: 1;
@@ -339,3 +341,4 @@
     animation: none;
   }
 }
+
