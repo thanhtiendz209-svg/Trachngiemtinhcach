@@ -70,6 +70,21 @@ async function visible(locator) {
   await locator.first().waitFor({ state: "visible", timeout: 20000 });
 }
 
+async function ready(page) {
+  // SSR content can be visible while its client modules are still loading.
+  // This runner targets the production preview, which has no HMR connection.
+  await page.waitForLoadState("networkidle", { timeout: 30000 });
+  await page.waitForFunction(() => [...document.querySelectorAll("button")].some((button) =>
+    Object.keys(button).some((key) => key.startsWith("__reactProps$") && typeof button[key]?.onClick === "function"),
+  ), null, { timeout: 20000 });
+}
+
+async function navigate(page, url) {
+  const response = await page.goto(url, { waitUntil: "domcontentloaded" });
+  await ready(page);
+  return response;
+}
+
 async function question(page, number) {
   await visible(page.getByText(new RegExp(`^Câu ${String(number).padStart(2, "0")} /`)));
 }
@@ -80,8 +95,11 @@ function observeErrors(page) {
 
 async function metrics(page) {
   return page.evaluate((siteOrigin) => {
-    const scripts = performance.getEntriesByType("resource")
-      .filter((entry) => entry.initiatorType === "script" && entry.name.startsWith(siteOrigin));
+    const scripts = performance.getEntriesByType("resource").filter((entry) => {
+      const resource = new URL(entry.name);
+      // modulepreload is reported as initiatorType=link, but transfers JS too.
+      return resource.origin === siteOrigin && /\.m?js$/.test(resource.pathname);
+    });
     return {
       localScriptDecodedBytes: scripts.reduce((sum, entry) => sum + entry.decodedBodySize, 0),
       localScriptTransferBytes: scripts.reduce((sum, entry) => sum + entry.transferSize, 0),
@@ -96,6 +114,7 @@ let page;
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await context.addInitScript(() => {
+    performance.setResourceTimingBufferSize(2000);
     window.__siteLongTasks = [];
     try {
       new PerformanceObserver((list) => {
@@ -108,7 +127,7 @@ try {
   page.setDefaultTimeout(15000);
 
   await check("home renders without horizontal overflow", async () => {
-    const response = await page.goto(base, { waitUntil: "domcontentloaded" });
+    const response = await navigate(page, base);
     assert.equal(response.status(), 200);
     await visible(page.locator("h1"));
     await page.waitForTimeout(700);
@@ -126,7 +145,7 @@ try {
   });
 
   await check("university search, filters, expansion and reset preserve results", async () => {
-    await page.goto(`${origin}/huong-nghiep`, { waitUntil: "domcontentloaded" });
+    await navigate(page, `${origin}/huong-nghiep`);
     const explorer = page.locator("#bo-loc-truong");
     const search = explorer.getByRole("textbox", { name: "Tìm trường" });
     await visible(search);
@@ -163,7 +182,7 @@ try {
 
   for (const quizId of ["riasec", "bigfive", "mbti", "interest", "combined"]) {
     await check(`${quizId}: answering, back, resume, scoring, result and restart`, async () => {
-      await page.goto(`${origin}/trac-nghiem/${quizId}`, { waitUntil: "domcontentloaded" });
+      await navigate(page, `${origin}/trac-nghiem/${quizId}`);
       const start = page.getByRole("button", { name: "Bắt đầu", exact: true });
       await visible(start);
       const countText = await page.locator("article li").first().textContent();
@@ -191,7 +210,7 @@ try {
       }
 
       await page.getByRole("link", { name: "Thoát", exact: true }).click();
-      await page.goto(`${origin}/trac-nghiem/${quizId}`, { waitUntil: "domcontentloaded" });
+      await navigate(page, `${origin}/trac-nghiem/${quizId}`);
       await visible(page.getByRole("heading", { name: "Tiếp tục bài đang làm dở?", exact: true }));
       await page.getByRole("button", { name: "Tiếp tục", exact: true }).click();
       await question(page, 1);
@@ -207,11 +226,13 @@ try {
         }));
       }, { id: quizId, size: count });
       await page.reload({ waitUntil: "domcontentloaded" });
+      await ready(page);
       await visible(page.getByRole("button", { name: "Tiếp tục", exact: true }));
       await page.getByRole("button", { name: "Tiếp tục", exact: true }).click();
       await question(page, count);
       await page.getByRole("button", { name: "Xem kết quả", exact: true }).click();
       await page.waitForURL(`**/ket-qua/${quizId}`, { timeout: 15000 });
+      await ready(page);
       await visible(page.getByRole("button", { name: "Sao chép", exact: true }));
       await visible(page.getByRole("button", { name: "Chia sẻ", exact: true }));
       await visible(page.getByRole("button", { name: "In", exact: true }));
@@ -226,7 +247,7 @@ try {
       report.quizResults[quizId] = saved.result;
       if (quizId === "riasec") await page.screenshot({ path: `${out}/result-riasec-desktop.png` });
 
-      await page.goto(`${origin}/trac-nghiem/${quizId}`, { waitUntil: "domcontentloaded" });
+      await navigate(page, `${origin}/trac-nghiem/${quizId}`);
       await visible(page.getByRole("heading", { name: "Bạn đã có một hồ sơ rồi", exact: true }));
       await visible(page.getByRole("link", { name: "Xem kết quả đã lưu", exact: true }));
       if (expectFixes) {
@@ -243,7 +264,7 @@ try {
   }
 
   await check("merged profile preserves all five results", async () => {
-    await page.goto(`${origin}/ho-so`, { waitUntil: "domcontentloaded" });
+    await navigate(page, `${origin}/ho-so`);
     await visible(page.getByRole("heading", { name: "Hồ sơ hướng nghiệp của bạn", exact: true }));
     await visible(page.getByText("Đã có kết quả", { exact: true }));
     assert.equal(await page.getByText("Đã có kết quả", { exact: true }).count(), 5);
@@ -253,7 +274,7 @@ try {
     const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
     const mobilePage = await mobile.newPage();
     observeErrors(mobilePage);
-    await mobilePage.goto(base, { waitUntil: "domcontentloaded" });
+    await navigate(mobilePage, base);
     await visible(mobilePage.locator("h1"));
     if (expectFixes) {
       assert.equal(await mobilePage.locator('nav[aria-label="Mobile"]').evaluate((nav) => Boolean(nav.closest("[inert]"))), true, "closed mobile links must be inert");
@@ -275,7 +296,7 @@ try {
     await visible(explorer.getByRole("button", { name: "Miền Bắc", exact: true }));
     assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
     await mobilePage.screenshot({ path: `${out}/university-mobile.png` });
-    await mobilePage.goto(base, { waitUntil: "domcontentloaded" });
+    await navigate(mobilePage, base);
     await visible(mobilePage.locator("h1"));
     await mobilePage.screenshot({ path: `${out}/home-mobile-reduced-motion.png` });
     if (expectFixes) {
@@ -296,7 +317,7 @@ try {
       await fallbackContext.addInitScript(() => { delete window.IntersectionObserver; });
       const fallbackPage = await fallbackContext.newPage();
       observeErrors(fallbackPage);
-      await fallbackPage.goto(base, { waitUntil: "domcontentloaded" });
+      await navigate(fallbackPage, base);
       await visible(fallbackPage.locator("h1"));
       await fallbackPage.waitForFunction(() => [...document.querySelectorAll(".reveal")].every((element) => getComputedStyle(element).opacity === "1"));
       await fallbackPage.screenshot({ path: `${out}/home-mobile-observer-fallback.png` });
