@@ -218,6 +218,16 @@ function RawRows({ headers, rows, label, searchable = false }: {
 function AdmissionsContent({ document }: { document: UniversityAdmissionsDocument }) {
   const [view, setView] = useState<"source" | "assumptions">("source");
   const viewId = useId();
+  const inputs = useMemo(() => {
+    const columns = document.assumptions.headers.flatMap((header, index) => {
+      const label = header.replace(/\s+/g, " ").trim();
+      return /^(giả định bạn nhập\s*\/\s*30|ghi chú)$/iu.test(label) ? [] : [index];
+    });
+    return {
+      headers: columns.map((index) => document.assumptions.headers[index]),
+      rows: document.assumptions.rows.map((row) => columns.map((index) => row[index] ?? null)),
+    };
+  }, [document.assumptions]);
   return (
     <>
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Chọn nhóm dữ liệu tuyển sinh">
@@ -233,7 +243,7 @@ function AdmissionsContent({ document }: { document: UniversityAdmissionsDocumen
         {view === "assumptions" ? (
           <section aria-label="Đầu và đối chiếu" data-admissions-view="assumptions">
             <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
-            <RawRows headers={document.assumptions.headers} rows={document.assumptions.rows} label="giả định" searchable />
+            <RawRows headers={inputs.headers} rows={inputs.rows} label="giả định" searchable />
             <h3 className="mb-3 mt-6 font-display text-lg font-semibold text-navy">Các dòng cần đối chiếu</h3>
             <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
           </section>
