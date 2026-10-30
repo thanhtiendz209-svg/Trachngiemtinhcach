@@ -300,7 +300,7 @@ export function UniversityExplorer({
               </Chip>
             ))}
           </FilterRow>
-          <p className="text-xs leading-relaxed text-muted">Chỉ lọc điểm trúng tuyển THPT thang 30 theo nguồn; không gộp điểm sàn, phương thức khác hoặc kịch bản ước tính.</p>
+          <p className="text-xs leading-relaxed text-muted">Lọc trường có ít nhất một ngành thuộc khoảng điểm trúng tuyển THPT thang 30 đã chọn. Không gộp điểm sàn, phương thức khác hoặc ước tính; xem điểm của từng ngành trên trang trường.</p>
           {score !== "Tất cả" && !hasScores ? (
             <p className="text-xs text-muted">
               Điểm trúng tuyển THPT thang 30: {MISSING_DATA} — bộ lọc điểm chưa áp dụng được.

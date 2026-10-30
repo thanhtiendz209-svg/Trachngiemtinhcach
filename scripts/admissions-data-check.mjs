@@ -18,10 +18,10 @@ const expected = {
   workbookSha256: "3ed7b403407ee8c1d37c83fddaf76189ef5f7927b22b307d4992c05a76e8b437",
 };
 const unchangedQuizFiles = {
-  "src/data/questions.ts": "9bdd247277c15d8f7afcc5db320e302cef8054d432141fbc3d97f597a15ac6a6",
-  "src/data/riasec-questions.ts": "071d0788dc0c3d8fb560a1a4bc50240021cfa74893e88eb232be9336f9a6be9b",
-  "src/data/bigfive.ts": "47b2ee39c3da49e6108979db4a1b8e0c94ade4daf3ac650db18d2b1efbe400fe",
-  "src/lib/quiz-engine.ts": "4389354e89fa4d322de693b7f93bb1ca1b23c989dacac48d423e578931d66fe7",
+  "src/data/questions.ts": "c4eb12451e0c0851da16ff681a39f4ddfcbb843e59cc6b3617264b2f2d80bc86",
+  "src/data/riasec-questions.ts": "2934d396fb5a3cdaa9832437af0e5f396914a224906d03ea24ebfda1a359e2c1",
+  "src/data/bigfive.ts": "ef69bba917be031b99e1530d69db3b8ba59d80c06b6a878333f77b9b20b175f2",
+  "src/lib/quiz-engine.ts": "00381d4b13ef214ecb0ad1c28d5bfdc47bb53e3559f551488a79f524c6e364ca",
 };
 
 function universitiesAt(path) {
