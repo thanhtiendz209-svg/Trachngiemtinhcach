@@ -120,6 +120,8 @@ async function fields(locator) {
 
 async function admissionControls(page, active = "Ngành và Điểm", document) {
   const controls = page.getByRole("group", { name: "Chọn nhóm dữ liệu tuyển sinh", exact: true });
+  await visible(controls);
+  await visible(controls.getByRole("button", { name: "Ngành và Điểm", exact: true }));
   assert.deepEqual(await controls.getByRole("button").allTextContents(), ["Ngành và Điểm", "Điểm giả định"], "School data has exactly two clearly labelled views");
   for (const name of ["Ngành và Điểm", "Điểm giả định"]) {
     assert.equal(await controls.getByRole("button", { name, exact: true }).getAttribute("aria-pressed"), String(name === active));
