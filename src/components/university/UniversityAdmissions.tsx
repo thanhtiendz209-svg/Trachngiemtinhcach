@@ -216,44 +216,26 @@ function RawRows({ headers, rows, label, searchable = false }: {
 }
 
 function AdmissionsContent({ document }: { document: UniversityAdmissionsDocument }) {
-  const [view, setView] = useState<"source" | "estimates">("source");
+  const [view, setView] = useState<"source" | "assumptions">("source");
   const viewId = useId();
-  const programEstimates = useMemo(() => {
-    const programs = document.programs.filter((program) => program.columns.some((column) => isEstimateColumn(column.label)));
-    const labels = [...new Set(programs.flatMap((program) => program.columns.filter((column) => isEstimateColumn(column.label)).map((column) => column.label)))];
-    return {
-      headers: ["Mã xét tuyển", "Tên chương trình", "Tổ hợp", ...labels],
-      rows: programs.map((program): AdmissionCell[] => [program.code, program.name, program.combinations, ...labels.map((label) => program.columns.find((column) => column.label === label)?.value ?? null)]),
-    };
-  }, [document.programs]);
   return (
     <>
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Chọn nhóm dữ liệu tuyển sinh">
         {([
           ["source", "Ngành và Điểm"],
-          ["estimates", "Điểm giả định"],
+          ["assumptions", "Đầu và đối chiếu"],
         ] as const).map(([id, title]) => (
           <Button key={id} type="button" size="sm" variant={view === id ? "primary" : "secondary"} className="min-h-11 font-semibold" aria-pressed={view === id} aria-controls={viewId} onClick={() => setView(id)}>{title}</Button>
         ))}
       </div>
       <div id={viewId}>
         {view === "source" ? <SourcesView document={document} /> : null}
-        {view === "estimates" ? (
-          <section aria-label="Điểm giả định" data-admissions-view="estimates">
-            <h3 className="mb-2 font-display text-lg font-semibold text-navy">Điểm giả định</h3>
-            <p className="mb-4 text-sm text-muted">Điểm ước lượng theo giả định, không phải điểm trúng tuyển công bố.</p>
-            <RawRows headers={document.estimates.headers} rows={document.estimates.rows} label="ước tính" searchable />
-            <h3 className="mb-3 mt-8 font-display text-lg font-semibold text-navy">Điểm giả định theo ngành</h3>
-            <RawRows headers={programEstimates.headers} rows={programEstimates.rows} label="ước lượng trong bảng" searchable />
-            <details className="mt-6 rounded-2xl border border-line p-4">
-              <summary className="min-h-11 cursor-pointer font-medium text-azure">Đầu vào và đối chiếu</summary>
-              <div className="pt-3">
-                <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
-                <RawRows headers={document.assumptions.headers} rows={document.assumptions.rows} label="giả định" searchable />
-                <h3 className="mb-3 mt-6 font-display text-lg font-semibold text-navy">Các dòng cần đối chiếu</h3>
-                <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
-              </div>
-            </details>
+        {view === "assumptions" ? (
+          <section aria-label="Đầu và đối chiếu" data-admissions-view="assumptions">
+            <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
+            <RawRows headers={document.assumptions.headers} rows={document.assumptions.rows} label="giả định" searchable />
+            <h3 className="mb-3 mt-6 font-display text-lg font-semibold text-navy">Các dòng cần đối chiếu</h3>
+            <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
           </section>
         ) : null}
       </div>
@@ -302,7 +284,7 @@ export function UniversityAdmissions({ schoolId, schoolName, open, onOpenChange,
           <div className="flex shrink-0 items-start gap-3 border-b border-line px-4 py-4 sm:px-6">
             <div className="min-w-0 flex-1">
               <Dialog.Title className="font-display text-lg font-semibold leading-snug text-navy sm:text-xl">{schoolName}</Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-muted">Ngành, điểm tham khảo và điểm giả định</Dialog.Description>
+              <Dialog.Description className="mt-1 text-sm text-muted">Ngành, điểm tham khảo và đối chiếu</Dialog.Description>
             </div>
             <Dialog.Close asChild><button type="button" aria-label="Đóng chi tiết tuyển sinh" className="grid size-11 shrink-0 place-items-center rounded-xl text-navy hover:bg-ice focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure"><X className="size-5" aria-hidden="true" /></button></Dialog.Close>
           </div>

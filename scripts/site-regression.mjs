@@ -122,10 +122,14 @@ async function admissionControls(page, active = "Ngành và Điểm", document) 
   const controls = page.getByRole("group", { name: "Chọn nhóm dữ liệu tuyển sinh", exact: true });
   await visible(controls);
   await visible(controls.getByRole("button", { name: "Ngành và Điểm", exact: true }));
-  assert.deepEqual(await controls.getByRole("button").allTextContents(), ["Ngành và Điểm", "Điểm giả định"], "School data has exactly two clearly labelled views");
-  for (const name of ["Ngành và Điểm", "Điểm giả định"]) {
+  assert.deepEqual(await controls.getByRole("button").allTextContents(), ["Ngành và Điểm", "Đầu và đối chiếu"], "School data has exactly the two requested views");
+  for (const name of ["Ngành và Điểm", "Đầu và đối chiếu"]) {
     assert.equal(await controls.getByRole("button", { name, exact: true }).getAttribute("aria-pressed"), String(name === active));
   }
+  assert.equal(await page.locator('[data-admissions-view="estimates"], [data-raw-kind="ước tính"], [data-raw-kind="ước lượng trong bảng"]').count(), 0, "Estimate scenarios and program estimate cells are absent from the UI");
+  assert.equal(await page.getByRole("button", { name: "Điểm giả định", exact: true }).count(), 0);
+  assert.equal(await page.getByRole("heading", { name: /^Điểm giả định/ }).count(), 0);
+  assert.equal(await page.getByText("Cảnh báo: có giá trị ngoài thang điểm — giữ nguyên để đối chiếu", { exact: true }).count(), 0);
   for (const text of [
     document?.notice,
     "Nhãn cột được giữ nguyên. Các ô ước lượng được chuyển sang mục “Kịch bản ước tính”, không trộn với dữ liệu nguồn.",
@@ -160,15 +164,18 @@ async function referencePoints(program) {
   return panel;
 }
 
-async function openAssumptions(page) {
-  const estimates = page.locator('[data-admissions-view="estimates"]');
-  const details = estimates.locator("details").filter({ has: page.locator("summary", { hasText: /^Đầu vào và đối chiếu$/ }) });
-  assert.equal(await details.count(), 1, "Assumptions and verification share one nested disclosure");
-  assert.equal(await details.getAttribute("open"), null, "Assumptions start collapsed inside the estimates view");
-  assert.equal(await details.getByRole("heading", { name: "Đầu vào và giả định", exact: true }).isVisible(), false);
-  await details.locator(":scope > summary").click();
-  await visible(details.getByRole("heading", { name: "Đầu vào và giả định", exact: true }));
-  return details;
+async function assumptionsView(page) {
+  const view = page.locator('[data-admissions-view="assumptions"]');
+  for (const name of ["Đầu vào và giả định", "Các dòng cần đối chiếu"]) {
+    const heading = view.getByRole("heading", { name, exact: true });
+    await visible(heading);
+    assert.equal(await heading.evaluate((element) => element.closest("details") === null), true, "Assumptions and verification appear directly without another disclosure");
+  }
+  assert.equal(await view.locator('[data-raw-kind="giả định"]').count(), 1);
+  assert.equal(await view.locator('[data-raw-kind="đối chiếu"]').count(), 1);
+  assert.equal(await page.getByRole("region", { name: "Ngành và dữ liệu nguồn", exact: true }).count(), 0);
+  await admissionControls(page, "Đầu và đối chiếu");
+  return view;
 }
 
 async function paginate(scope, rowSelector, keyAttribute, nextLabel) {
@@ -305,7 +312,7 @@ try {
       await page.screenshot({ path: `${out}/school-hust-page-desktop.png` });
     });
 
-    await check("HUST source pagination, CH1 cutoff and separate estimates retain every row", async () => {
+    await check("HUST source pagination, CH1 cutoff and direct assumptions retain every row", async () => {
       const document = await page.request.get(`${origin}/admissions/2026/uni-001.json`).then((response) => response.json());
       await admissionControls(page, "Ngành và Điểm", document);
       const sourceView = page.getByRole("region", { name: "Ngành và dữ liệu nguồn", exact: true });
@@ -336,20 +343,21 @@ try {
       await visible(thpt);
       await thpt.scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/school-hust-source-desktop.png` });
-      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
-      await admissionControls(page, "Điểm giả định", document);
-      const estimates = page.locator('[data-admissions-view="estimates"]');
-      await visible(estimates.getByRole("heading", { name: "Điểm giả định", exact: true }));
+      await page.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
+      const assumptions = await assumptionsView(page);
       assert.equal(await sourceView.count(), 0);
-      await estimates.getByRole("textbox", { name: "Tìm ước lượng trong bảng", exact: true }).fill("CH1");
-      const estimateRow = estimates.locator('[data-raw-kind="ước lượng trong bảng"] details[data-raw-row]').filter({ has: page.locator("summary", { hasText: /^CH1\b/ }) }).first();
-      await estimateRow.locator(":scope > summary").click();
-      await visible(estimateRow.getByText("THPT ước lượng /30", { exact: true }));
-      await visible(estimateRow.getByText("Chưa đủ công thức/đầu vào", { exact: true }));
-      const assumptions = await openAssumptions(page);
-      const assumptionRows = await paginate(assumptions.locator('[data-raw-kind="giả định"]'), "details[data-raw-row]", "data-raw-row", "Trang giả định sau");
-      assert.deepEqual(assumptionRows.map(Number), document.assumptions.rows.map((_, index) => index), "Every assumption remains accessible inside estimates");
+      const inputRows = assumptions.locator('[data-raw-kind="giả định"]');
+      const assumptionRows = await paginate(inputRows, "details[data-raw-row]", "data-raw-row", "Trang giả định sau");
+      assert.deepEqual(assumptionRows.map(Number), document.assumptions.rows.map((_, index) => index), "Every assumption remains directly accessible");
       report.admissionsResults.hustAssumptions = assumptionRows.length;
+      await inputRows.getByRole("textbox", { name: "Tìm giả định", exact: true }).fill("A00");
+      const input = inputRows.locator('[data-raw-row="0"]');
+      await input.locator(":scope > summary").click();
+      const values = await fields(input);
+      assert.equal(values["THPT theo tổ hợp"], "A00");
+      assert.equal(Number(values["Giá trị dùng /30"]), 19.41);
+      await input.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${out}/school-hust-assumptions-desktop.png` });
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
       await page.reload({ waitUntil: "domcontentloaded" });
       await ready(page);
@@ -375,7 +383,7 @@ try {
       await page.screenshot({ path: `${out}/school-neu-new-program-desktop.png` });
     });
 
-    await check("source facts and nested verification spanning multiple pages stay reachable", async () => {
+    await check("source facts and direct verification spanning multiple pages stay reachable", async () => {
       await navigate(page, `${origin}/truong-dai-hoc/uni-003`);
       await page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("NTHCN18");
       const program = page.locator('[data-program-id="uni-003-row-95"]');
@@ -386,11 +394,20 @@ try {
       const document = await page.request.get(`${origin}/admissions/2026/uni-003.json`).then((response) => response.json());
       assert.deepEqual(rows.map(Number), document.programs.find((entry) => entry.id === "uni-003-row-95").sourceRows);
       report.admissionsResults.ftuSources = rows.length;
-      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
-      const assumptions = await openAssumptions(page);
-      const verificationRows = await paginate(assumptions.locator('[data-raw-kind="đối chiếu"]'), "details[data-raw-row]", "data-raw-row", "Trang đối chiếu sau");
-      assert.deepEqual(verificationRows.map(Number), document.verification.rows.map((_, index) => index), "Every verification row remains accessible without a third view button");
+      await page.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
+      const assumptions = await assumptionsView(page);
+      const verification = assumptions.locator('[data-raw-kind="đối chiếu"]');
+      const verificationRows = await paginate(verification, "details[data-raw-row]", "data-raw-row", "Trang đối chiếu sau");
+      assert.deepEqual(verificationRows.map(Number), document.verification.rows.map((_, index) => index), "Every verification row remains directly accessible");
       report.admissionsResults.ftuVerification = verificationRows.length;
+      await verification.getByRole("textbox", { name: "Tìm đối chiếu", exact: true }).fill("NTHKD07");
+      const row = verification.locator('[data-raw-row="0"]');
+      await row.locator(":scope > summary").click();
+      const values = await fields(row);
+      assert.equal(values["Mã"], "NTHKD07");
+      assert.equal(values["Dòng nguồn cũ"], "13796");
+      await row.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${out}/school-ftu-verification-desktop.png` });
     });
 
     await check("programs without linked records show original points in the same reference panel", async () => {
@@ -405,25 +422,20 @@ try {
       report.admissionsResults.sourceLessFloor = { program: "uni-086-row-16", point: 16.5 };
     });
 
-    await check("all HCMUT estimate scenarios stay separate, paginated and unclamped", async () => {
+    await check("schools with stored scenarios expose only source data and direct assumptions", async () => {
       await navigate(page, `${origin}/truong-dai-hoc/uni-068`);
       await admissionControls(page);
-      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
-      const estimates = page.locator('[data-admissions-view="estimates"]');
-      await visible(estimates.getByRole("heading", { name: "Điểm giả định", exact: true }));
-      const scenarios = estimates.locator('[data-raw-kind="ước tính"]');
-      const rows = await paginate(scenarios, "details[data-raw-row]", "data-raw-row", "Trang ước tính sau");
       const document = await page.request.get(`${origin}/admissions/2026/uni-068.json`).then((response) => response.json());
-      assert.deepEqual(rows.map(Number), document.estimates.rows.map((_, index) => index), "Every estimate row remains reachable exactly once");
-      report.admissionsResults.hcmutEstimates = rows.length;
-      await scenarios.getByRole("textbox", { name: "Tìm ước tính", exact: true }).fill("Tài nguyên và Môi trường");
-      const outside = scenarios.locator('[data-raw-row="47"]');
-      await outside.locator(":scope > summary").click();
-      await visible(outside.getByText("Cảnh báo: có giá trị ngoài thang điểm — giữ nguyên để đối chiếu", { exact: true }));
-      const values = await fields(outside);
-      assert.ok(Number(values["THPT cần /30"]) > 30, "Preserve out-of-range estimates with warnings rather than clamping them to a cutoff");
-      await outside.scrollIntoViewIfNeeded();
-      await page.screenshot({ path: `${out}/school-hcmut-estimate-desktop.png` });
+      assert.ok(document.estimates.rows.length > 0, "This school exercises a document whose stored estimates are intentionally offscreen");
+      await page.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
+      const assumptions = await assumptionsView(page);
+      const rows = await paginate(assumptions.locator('[data-raw-kind="giả định"]'), "details[data-raw-row]", "data-raw-row", "Trang giả định sau");
+      assert.deepEqual(rows.map(Number), document.assumptions.rows.map((_, index) => index));
+      report.admissionsResults.hcmutAssumptions = rows.length;
+      await page.getByRole("button", { name: "Ngành và Điểm", exact: true }).click();
+      await admissionControls(page);
+      await visible(page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }));
+      assert.equal(await assumptions.count(), 0, "Returning to program points hides the assumptions view");
     });
 
     await check("unknown school IDs show a friendly page without fetching invented data", async () => {
@@ -569,18 +581,27 @@ try {
       await reference.locator(":scope > summary").scrollIntoViewIfNeeded();
       assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Source fields fit a mobile screen");
       await mobilePage.screenshot({ path: `${out}/school-hust-source-mobile.png` });
-      await navigate(mobilePage, `${origin}/truong-dai-hoc/uni-068`);
-      await mobilePage.getByRole("button", { name: "Điểm giả định", exact: true }).click();
-      await admissionControls(mobilePage, "Điểm giả định");
-      await visible(mobilePage.locator('[data-admissions-view="estimates"]').getByRole("heading", { name: "Điểm giả định", exact: true }));
-      const scenarios = mobilePage.locator('[data-admissions-view="estimates"] [data-raw-kind="ước tính"]');
-      await scenarios.getByRole("textbox", { name: "Tìm ước tính", exact: true }).fill("Tài nguyên và Môi trường");
-      const estimate = scenarios.locator('[data-raw-row="47"]');
-      await estimate.locator(":scope > summary").click();
-      await visible(estimate.getByText("Cảnh báo: có giá trị ngoài thang điểm — giữ nguyên để đối chiếu", { exact: true }));
-      await estimate.scrollIntoViewIfNeeded();
-      assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Estimate fields and long source URLs fit a mobile screen");
-      await mobilePage.screenshot({ path: `${out}/school-hcmut-estimate-mobile.png` });
+      await mobilePage.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
+      const assumptions = await assumptionsView(mobilePage);
+      const inputRows = assumptions.locator('[data-raw-kind="giả định"]');
+      await inputRows.getByRole("textbox", { name: "Tìm giả định", exact: true }).fill("A00");
+      const input = inputRows.locator('[data-raw-row="0"]');
+      await input.locator(":scope > summary").click();
+      assert.equal(Number((await fields(input))["Giá trị dùng /30"]), 19.41);
+      await input.scrollIntoViewIfNeeded();
+      assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Assumption fields and long source URLs fit a mobile screen");
+      await mobilePage.screenshot({ path: `${out}/school-hust-assumptions-mobile.png` });
+      await navigate(mobilePage, `${origin}/truong-dai-hoc/uni-003`);
+      await mobilePage.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
+      const ftuAssumptions = await assumptionsView(mobilePage);
+      const verification = ftuAssumptions.locator('[data-raw-kind="đối chiếu"]');
+      await verification.getByRole("textbox", { name: "Tìm đối chiếu", exact: true }).fill("NTHKD07");
+      const row = verification.locator('[data-raw-row="0"]');
+      await row.locator(":scope > summary").click();
+      assert.equal((await fields(row))["Dòng nguồn cũ"], "13796");
+      await row.scrollIntoViewIfNeeded();
+      assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Verification fields fit a mobile screen");
+      await mobilePage.screenshot({ path: `${out}/school-ftu-verification-mobile.png` });
     }
     await navigate(mobilePage, base);
     await visible(mobilePage.locator("h1"));
