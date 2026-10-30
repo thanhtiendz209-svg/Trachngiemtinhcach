@@ -1,10 +1,17 @@
 import { memo, useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { ExternalLink, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { University } from "@/data/types";
 import { FIT_NOTE, MISSING_DATA } from "@/lib/riasec";
 import { admissionHrefs } from "@/lib/university";
 import { cn } from "@/lib/utils";
+
+const scoreFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
+
+function scoreRange(min: number, max: number) {
+  return min === max ? scoreFormat.format(min) : `${scoreFormat.format(min)}–${scoreFormat.format(max)}`;
+}
 
 function Initials({ text }: { text: string }) {
   const letters = text.replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase() || "U";
@@ -49,6 +56,15 @@ export const UniversityCard = memo(function UniversityCard({
   );
   const tuition = uni.tuition;
   const scores = uni.admissionScores;
+  const admissions = uni.admissions2026;
+  const thptRange = useMemo(() => {
+    const values = admissions?.thptValues ?? [];
+    return values.length ? scoreRange(Math.min(...values), Math.max(...values)) : null;
+  }, [admissions]);
+  const floors = useMemo(
+    () => admissions?.ranges.filter((range) => /sàn|ngưỡng/i.test(range.kind)) ?? [],
+    [admissions],
+  );
 
   return (
     <article className="flex h-full flex-col rounded-[24px] bg-card p-5 shadow-border [content-visibility:auto] [contain-intrinsic-size:auto_280px]">
@@ -93,12 +109,29 @@ export const UniversityCard = memo(function UniversityCard({
             <span className="tabular-nums text-azure">{fit}%</span>
           </p>
         ) : null}
-        <p>
-          <span className="font-medium text-navy">Điểm chuẩn tham khảo: </span>
-          <span className="text-muted">
-            {scores[0] ? `${scores[0].year}: ${scores[0].score}` : MISSING_DATA}
-          </span>
-        </p>
+        {admissions ? (
+          <>
+            <p>
+              <span className="font-medium text-navy">Điểm trúng tuyển THPT /30 ({admissions.year}): </span>
+              <span className="text-muted">{thptRange ?? "Chưa có điểm trúng tuyển THPT thang 30 trong nguồn"}</span>
+            </p>
+            {floors.length ? (
+              <p className="text-xs leading-relaxed text-muted">
+                <span className="font-medium text-navy">Điểm sàn / ngưỡng đăng ký, tách riêng: </span>
+                {floors.map((range) => `${range.method}: ${scoreRange(range.min, range.max)} (thang ${range.scale})`).join(" · ")}
+              </p>
+            ) : null}
+            <p className="text-xs leading-relaxed text-muted">
+              {admissions.programCount} dòng chương trình · {admissions.sourceRecordCount} bản ghi nguồn · {admissions.estimateCount} kịch bản ước tính riêng.
+              {" "}Xem phương thức, thang điểm, điều kiện và nguồn tại trang của trường.
+            </p>
+          </>
+        ) : (
+          <p>
+            <span className="font-medium text-navy">Điểm chuẩn tham khảo: </span>
+            <span className="text-muted">{scores[0] ? `${scores[0].year ?? "Chưa rõ năm"}: ${scores[0].score}` : MISSING_DATA}</span>
+          </p>
+        )}
         <p>
           <span className="font-medium text-navy">Học phí: </span>
           <span className="text-muted">
@@ -120,6 +153,11 @@ export const UniversityCard = memo(function UniversityCard({
       ) : null}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-4">
+        <Button asChild size="sm" className="min-h-11">
+          <Link to="/truong-dai-hoc/$universityId" params={{ universityId: uni.id }}>
+            Xem ngành &amp; điểm
+          </Link>
+        </Button>
         {uni.website ? (
           <Button asChild variant="secondary" size="sm" className="min-h-11">
             <a href={uni.website} target="_blank" rel="noreferrer">

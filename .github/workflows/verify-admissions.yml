@@ -1,0 +1,89 @@
+name: Verify 2026 admissions and existing features
+
+on:
+  push:
+    branches: [import-admissions-2026]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare isolated browser workspace
+        run: |
+          sudo mkdir -p /workspace
+          sudo chown "$USER":"$USER" /workspace
+          cp -a "$GITHUB_WORKSPACE"/. /workspace/
+          cd /workspace
+          rm -rf screenshots
+          mkdir -p screenshots
+          git fetch --no-tags --depth=1 origin 1820dd022efe6aa96930895f6722c69524d420d6
+          git show 1820dd022efe6aa96930895f6722c69524d420d6:src/data/universities.ts >screenshots/baseline-universities.ts
+      - name: Install dependencies and browser
+        working-directory: /workspace
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Check every school, source reference and unchanged quiz data
+        working-directory: /workspace
+        env:
+          ADMISSIONS_CHECK_REPORT: /workspace/screenshots/admissions-data-check.json
+          ADMISSIONS_BASELINE_UNIVERSITIES: /workspace/screenshots/baseline-universities.ts
+        run: node scripts/admissions-data-check.mjs
+      - name: Run existing and regression unit tests
+        working-directory: /workspace
+        run: |
+          set +e
+          npm test >screenshots/unit-tests.log 2>&1
+          test_status=$?
+          cat screenshots/unit-tests.log
+          exit "$test_status"
+      - name: Build production output and check generated route types
+        working-directory: /workspace
+        run: |
+          npm run build 2>&1 | tee screenshots/build.log
+          cp src/routeTree.gen.ts screenshots/routeTree.gen.ts
+          npm run typecheck 2>&1 | tee screenshots/typecheck.log
+      - name: Render development build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          sh startup.sh
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:8080/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png
+      - name: Render production build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          npm run preview:restart
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/production.png --baseline /workspace/screenshots/dev.json
+          node --input-type=module -e 'import fs from "node:fs"; const v=JSON.parse(fs.readFileSync("screenshots/production.json", "utf8")); if(v.divergesFromBaseline) throw Error(v.baselineReasons.join("; "));'
+      - name: Exercise dedicated school pages and all five quiz flows
+        working-directory: /workspace
+        env:
+          SITE_EXPECT_FIXES: '1'
+          SITE_ADMISSIONS_2026: '1'
+          SITE_REVISION: admissions-2026
+        run: node scripts/site-regression.mjs http://127.0.0.1:8081/
+      - name: Preserve browser screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: admissions-verification-${{ github.run_attempt }}
+          path: /workspace/screenshots/
+          if-no-files-found: warn

@@ -78,7 +78,10 @@ export function UniversityExplorer({
   const { hasTuition, hasScores, methods } = useMemo(
     () => ({
       hasTuition: UNIVERSITIES.some((u) => u.tuition),
-      hasScores: UNIVERSITIES.some((u) => u.admissionScores.length > 0),
+      hasScores: UNIVERSITIES.some((u) =>
+        (u.admissions2026?.thptValues.length ?? 0) > 0 ||
+        u.programs.some((program) => program.thptValue != null && Number.isFinite(program.thptValue) && program.thptValue >= 0 && program.thptValue <= 30),
+      ),
       methods: uniqueAdmissionMethods(UNIVERSITIES),
     }),
     [],
@@ -169,7 +172,8 @@ export function UniversityExplorer({
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-azure">Bộ lọc trường</p>
       <h2 className="mt-2 font-display text-2xl font-semibold text-navy">{heading}</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted">
-        {UNIVERSITIES.length} trường/học viện theo file miền, tỉnh và ngành hệ chính quy. Một số trường chỉ có danh sách ngành tiêu biểu. Học phí và điểm chuẩn: {MISSING_DATA}.
+        {UNIVERSITIES.length} trường/học viện theo miền, tỉnh và ngành hệ chính quy. Điểm, phương thức, thang điểm và nguồn xem tại trang riêng của từng trường. Một số danh sách ngành chỉ mang tính tiêu biểu.
+        {!hasTuition ? <> Học phí: {MISSING_DATA}.</> : null}
       </p>
       {riasec ? (
         <p className="mt-2 text-sm text-navy">
@@ -289,16 +293,17 @@ export function UniversityExplorer({
             <p className="text-xs text-muted">Học phí: {MISSING_DATA} — bộ lọc khoảng học phí chưa áp dụng được.</p>
           ) : null}
 
-          <FilterRow label="Điểm chuẩn">
+          <FilterRow label="Điểm trúng tuyển THPT /30">
             {SCORE_BANDS.map((s) => (
               <Chip key={s} active={score === s} onClick={() => setScore(s)}>
                 {s}
               </Chip>
             ))}
           </FilterRow>
+          <p className="text-xs leading-relaxed text-muted">Chỉ lọc điểm trúng tuyển THPT thang 30 theo nguồn; không gộp điểm sàn, phương thức khác hoặc kịch bản ước tính.</p>
           {score !== "Tất cả" && !hasScores ? (
             <p className="text-xs text-muted">
-              Điểm chuẩn: {MISSING_DATA} — bộ lọc điểm chuẩn chưa áp dụng được.
+              Điểm trúng tuyển THPT thang 30: {MISSING_DATA} — bộ lọc điểm chưa áp dụng được.
             </p>
           ) : null}
 

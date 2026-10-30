@@ -170,7 +170,10 @@ function tuitionInBand(uni: University, band: TuitionBand) {
 
 function scoreInBand(uni: University, band: ScoreBand) {
   if (band === "Tất cả") return true;
-  const values = uni.programs.map((p) => p.thptValue).filter((n): n is number => n != null);
+  // Workbook summaries contain published THPT cutoffs on the 30-point scale.
+  // An empty summary is authoritative: floors and estimates are not cutoffs.
+  const values = uni.admissions2026?.thptValues ??
+    uni.programs.map((p) => p.thptValue).filter((n): n is number => n != null);
   if (!values.length) return false;
   return values.some((n) => {
     if (band === "Dưới 20") return n < 20;

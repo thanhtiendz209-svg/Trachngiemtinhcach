@@ -64,6 +64,11 @@ export function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/truong-dai-hoc" className="text-paper/85 hover:text-cyan-soft">
+                Trường đại học & điểm tuyển sinh
+              </Link>
+            </li>
+            <li>
               <Link to="/ho-so" className="text-paper/85 hover:text-cyan-soft">
                 Hồ sơ của bạn
               </Link>
@@ -100,3 +105,4 @@ export function Footer() {
     </footer>
   );
 }
+

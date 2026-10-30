@@ -1,3 +1,5 @@
+import type { UniversityAdmissionsSummary } from "./university-admissions-types";
+
 export type PersonalityGroup = "analyst" | "creative" | "social" | "organizer";
 
 export interface PersonalityType {
@@ -188,6 +190,7 @@ export interface University {
   admissionScores: UniversityAdmissionScore[];
   admissionMethods: string[];
   lastUpdated: string | null;
+  admissions2026?: UniversityAdmissionsSummary;
 }
 
 export interface MajorGroup {
@@ -196,3 +199,4 @@ export interface MajorGroup {
   riasec: string[];
   examples: string[];
 }
+

@@ -33,6 +33,9 @@ function CareerPage() {
               Lọc 126 trường theo khu vực, ngành và mức phù hợp RIASEC — rồi xem gợi ý nghề như bản đồ, không như
               lệnh.
             </p>
+            <Button asChild variant="secondary" className="mt-5">
+              <Link to="/truong-dai-hoc">Tra cứu ngành & điểm của từng trường</Link>
+            </Button>
           </Reveal>
         </div>
       </div>
@@ -101,3 +104,4 @@ function CareerPage() {
     </SiteShell>
   );
 }
+
