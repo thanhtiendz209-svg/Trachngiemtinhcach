@@ -95,7 +95,13 @@ jobs:
       - name: Restore browser QA dependencies
         working-directory: /workspace
         run: |
+          # npm ci removes node_modules, including Nitro's generated preview
+          # build-info pointer. Keep it so QA serves the production-only build.
+          test -d node_modules/.nitro
+          nitro_build_snapshot=$(mktemp -d "$RUNNER_TEMP/vercel-nitro-build.XXXXXX")
+          cp -a node_modules/.nitro "$nitro_build_snapshot/"
           npm ci --no-audit --no-fund 2>&1 | tee screenshots/qa-install.log
+          cp -a "$nitro_build_snapshot/.nitro" node_modules/
           npx playwright install --with-deps chromium
       - name: Render the generated production server on desktop and mobile
         working-directory: /workspace
