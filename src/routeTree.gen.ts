@@ -22,6 +22,8 @@ import { Route as NhomTinhCachIndexRouteImport } from './routes/nhom-tinh-cach.i
 import { Route as NhomTinhCachTypeIdRouteImport } from './routes/nhom-tinh-cach.$typeId'
 import { Route as TracNghiemIndexRouteImport } from './routes/trac-nghiem.index'
 import { Route as TracNghiemQuizIdRouteImport } from './routes/trac-nghiem.$quizId'
+import { Route as TruongDaiHocIndexRouteImport } from './routes/truong-dai-hoc.index'
+import { Route as TruongDaiHocUniversityIdRouteImport } from './routes/truong-dai-hoc.$universityId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +90,17 @@ const TracNghiemQuizIdRoute = TracNghiemQuizIdRouteImport.update({
   path: '/$quizId',
   getParentRoute: () => TracNghiemRoute,
 } as any)
+const TruongDaiHocIndexRoute = TruongDaiHocIndexRouteImport.update({
+  id: '/truong-dai-hoc/',
+  path: '/truong-dai-hoc/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TruongDaiHocUniversityIdRoute =
+  TruongDaiHocUniversityIdRouteImport.update({
+    id: '/truong-dai-hoc/$universityId',
+    path: '/truong-dai-hoc/$universityId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -100,9 +113,11 @@ export interface FileRoutesByFullPath {
   '/ket-qua/$quizId': typeof KetQuaQuizIdRoute
   '/nhom-tinh-cach/$typeId': typeof NhomTinhCachTypeIdRoute
   '/trac-nghiem/$quizId': typeof TracNghiemQuizIdRoute
+  '/truong-dai-hoc/$universityId': typeof TruongDaiHocUniversityIdRoute
   '/huong-nghiep/': typeof HuongNghiepIndexRoute
   '/nhom-tinh-cach/': typeof NhomTinhCachIndexRoute
   '/trac-nghiem/': typeof TracNghiemIndexRoute
+  '/truong-dai-hoc/': typeof TruongDaiHocIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,9 +127,11 @@ export interface FileRoutesByTo {
   '/ket-qua/$quizId': typeof KetQuaQuizIdRoute
   '/nhom-tinh-cach/$typeId': typeof NhomTinhCachTypeIdRoute
   '/trac-nghiem/$quizId': typeof TracNghiemQuizIdRoute
+  '/truong-dai-hoc/$universityId': typeof TruongDaiHocUniversityIdRoute
   '/huong-nghiep': typeof HuongNghiepIndexRoute
   '/nhom-tinh-cach': typeof NhomTinhCachIndexRoute
   '/trac-nghiem': typeof TracNghiemIndexRoute
+  '/truong-dai-hoc': typeof TruongDaiHocIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,9 +145,11 @@ export interface FileRoutesById {
   '/ket-qua/$quizId': typeof KetQuaQuizIdRoute
   '/nhom-tinh-cach/$typeId': typeof NhomTinhCachTypeIdRoute
   '/trac-nghiem/$quizId': typeof TracNghiemQuizIdRoute
+  '/truong-dai-hoc/$universityId': typeof TruongDaiHocUniversityIdRoute
   '/huong-nghiep/': typeof HuongNghiepIndexRoute
   '/nhom-tinh-cach/': typeof NhomTinhCachIndexRoute
   '/trac-nghiem/': typeof TracNghiemIndexRoute
+  '/truong-dai-hoc/': typeof TruongDaiHocIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -145,9 +164,11 @@ export interface FileRouteTypes {
     | '/ket-qua/$quizId'
     | '/nhom-tinh-cach/$typeId'
     | '/trac-nghiem/$quizId'
+    | '/truong-dai-hoc/$universityId'
     | '/huong-nghiep/'
     | '/nhom-tinh-cach/'
     | '/trac-nghiem/'
+    | '/truong-dai-hoc/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,9 +178,11 @@ export interface FileRouteTypes {
     | '/ket-qua/$quizId'
     | '/nhom-tinh-cach/$typeId'
     | '/trac-nghiem/$quizId'
+    | '/truong-dai-hoc/$universityId'
     | '/huong-nghiep'
     | '/nhom-tinh-cach'
     | '/trac-nghiem'
+    | '/truong-dai-hoc'
   id:
     | '__root__'
     | '/'
@@ -172,9 +195,11 @@ export interface FileRouteTypes {
     | '/ket-qua/$quizId'
     | '/nhom-tinh-cach/$typeId'
     | '/trac-nghiem/$quizId'
+    | '/truong-dai-hoc/$universityId'
     | '/huong-nghiep/'
     | '/nhom-tinh-cach/'
     | '/trac-nghiem/'
+    | '/truong-dai-hoc/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -185,6 +210,8 @@ export interface RootRouteChildren {
   NhomTinhCachRoute: typeof NhomTinhCachRouteWithChildren
   TracNghiemRoute: typeof TracNghiemRouteWithChildren
   KetQuaQuizIdRoute: typeof KetQuaQuizIdRoute
+  TruongDaiHocUniversityIdRoute: typeof TruongDaiHocUniversityIdRoute
+  TruongDaiHocIndexRoute: typeof TruongDaiHocIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -280,6 +307,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TracNghiemQuizIdRouteImport
       parentRoute: typeof TracNghiemRoute
     }
+    '/truong-dai-hoc/': {
+      id: '/truong-dai-hoc/'
+      path: '/truong-dai-hoc'
+      fullPath: '/truong-dai-hoc/'
+      preLoaderRoute: typeof TruongDaiHocIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/truong-dai-hoc/$universityId': {
+      id: '/truong-dai-hoc/$universityId'
+      path: '/truong-dai-hoc/$universityId'
+      fullPath: '/truong-dai-hoc/$universityId'
+      preLoaderRoute: typeof TruongDaiHocUniversityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -333,6 +374,8 @@ const rootRouteChildren: RootRouteChildren = {
   NhomTinhCachRoute: NhomTinhCachRouteWithChildren,
   TracNghiemRoute: TracNghiemRouteWithChildren,
   KetQuaQuizIdRoute: KetQuaQuizIdRoute,
+  TruongDaiHocUniversityIdRoute: TruongDaiHocUniversityIdRoute,
+  TruongDaiHocIndexRoute: TruongDaiHocIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

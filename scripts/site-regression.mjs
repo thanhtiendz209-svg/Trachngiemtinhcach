@@ -248,6 +248,8 @@ try {
       await visible(page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }));
       assert.ok(admissionsRequests.includes("/admissions/2026/uni-001.json"));
       assert.ok(admissionsRequests.every((path) => path === "/admissions/2026/uni-001.json"), "Entering one school loads that school only");
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await page.screenshot({ path: `${out}/school-hust-page-desktop.png` });
     });
 
     await check("HUST source pagination, CH1 cutoff and separate estimates retain every row", async () => {
@@ -474,6 +476,8 @@ try {
       await explorer.getByRole("link", { name: "Xem ngành & điểm", exact: true }).click();
       await mobilePage.waitForURL("**/truong-dai-hoc/uni-001");
       await ready(mobilePage);
+      await mobilePage.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+      await mobilePage.screenshot({ path: `${out}/school-hust-page-mobile.png` });
       await mobilePage.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("CH1");
       const program = mobilePage.locator('[data-program-id="uni-001-row-16"]');
       await program.locator(":scope > summary").click();
