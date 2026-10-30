@@ -1,6 +1,6 @@
 import { memo, useDeferredValue, useEffect, useId, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ExternalLink, Info, Search, X } from "lucide-react";
+import { ExternalLink, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   AdmissionCell,
@@ -44,13 +44,16 @@ function SourceLink({ value, label }: { value: string; label: string }) {
   );
 }
 
-function Fields({ columns }: { columns: Array<{ label: string; value: AdmissionCell }> }) {
+function Fields({ columns, compact = false }: {
+  columns: Array<{ label: string; value: AdmissionCell; wide?: boolean; prominent?: boolean }>;
+  compact?: boolean;
+}) {
   return (
-    <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
-      {columns.map(({ label, value }, index) => (
-        <div key={`${label}-${index}`} className="min-w-0 rounded-xl bg-mist px-3 py-2.5">
+    <dl className={cn("grid min-w-0 text-sm", compact ? "grid-cols-2 gap-x-4 gap-y-3" : "gap-3 sm:grid-cols-2")}>
+      {columns.map(({ label, value, wide, prominent }, index) => (
+        <div key={`${label}-${index}`} className={cn("min-w-0", compact ? wide && "col-span-2" : "rounded-xl bg-mist px-3 py-2.5")}>
           <dt className="whitespace-pre-line text-xs font-medium text-azure">{label || `Cột ${index + 1}`}</dt>
-          <dd className="mt-1 whitespace-pre-line break-words text-navy">
+          <dd className={cn("mt-1 whitespace-pre-line break-words text-navy", prominent && "text-xl font-semibold tabular-nums")}>
             {cellText(value)}
             {typeof value === "string" && /https?:\/\//.test(value)
               ? <SourceLink value={value} label="Xem nguồn" />
@@ -81,23 +84,20 @@ function Pagination({ page, count, label, onChange }: {
 
 const SourceRecord = memo(function SourceRecord({ source }: { source: AdmissionSourceRecord }) {
   return (
-    <article className="rounded-2xl border border-line p-3" data-source-row={source.row}>
-      <p className="mb-3 text-xs font-semibold text-azure">Bản ghi nguồn {source.id} · dòng Excel {source.row}</p>
-      <Fields columns={[
-        { label: "Mã trường / mã xét tuyển", value: `${source.schoolCode} · ${source.code}` },
-        { label: "Tên trong nguồn", value: source.name },
-        { label: "Phương thức", value: source.method },
-        { label: "Tổ hợp môn", value: source.combinations },
+    <article className="rounded-xl border border-line p-3 sm:p-4" data-source-row={source.row}>
+      <Fields compact columns={[
+        { label: "Giá trị trong nguồn", value: source.value, prominent: true },
         { label: "Thang điểm", value: source.scale },
-        { label: "Năm", value: source.year },
-        { label: "Giá trị trong nguồn", value: source.value },
+        { label: "Phương thức", value: source.method, wide: true },
+        ...(source.combinations ? [{ label: "Tổ hợp môn", value: source.combinations, wide: true }] : []),
         { label: "Loại dữ liệu", value: source.kind },
-        { label: "Điều kiện", value: source.condition },
-        { label: "Phân loại", value: source.classification },
+        { label: "Năm", value: source.year },
+        ...(source.condition ? [{ label: "Điều kiện", value: source.condition, wide: true }] : []),
+        { label: "Phân loại", value: source.classification, wide: true },
       ]} />
       <div className="mt-2 flex flex-wrap gap-x-4 text-sm">
         <SourceLink value={source.url} label="Xem nguồn" />
-        {source.originalUrl ? <SourceLink value={source.originalUrl} label="Nguồn gốc" /> : null}
+        {source.originalUrl && source.originalUrl !== source.url ? <SourceLink value={source.originalUrl} label="Nguồn gốc" /> : null}
       </div>
     </article>
   );
@@ -119,29 +119,19 @@ const ProgramDetails = memo(function ProgramDetails({ program, sourceMap }: {
     <details className="rounded-2xl bg-card shadow-border" onToggle={(event) => setExpanded(event.currentTarget.open)} data-program-id={program.id} data-program-code={program.code}>
       <summary className="min-h-11 cursor-pointer rounded-2xl p-4 text-sm text-navy focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure">
         <span className="font-semibold">{program.code || "Chưa có mã"} · {program.name}</span>
-        <span className="mt-1 block text-xs leading-relaxed text-muted">{program.combinations || "Chưa có tổ hợp"} · {sources.length} bản ghi nguồn</span>
+        <span className="mt-1 block text-xs leading-relaxed text-muted">{program.combinations || "Chưa có tổ hợp"}</span>
       </summary>
       {expanded ? (
-        <div className="space-y-4 border-t border-line p-4">
-          <Fields columns={[
-            { label: "Chương trình / nguồn gốc", value: program.origin },
-            { label: "Đối chiếu ngành", value: program.matchStatus },
-            { label: "Mã ngành gốc", value: program.originalCode },
-            { label: "Tên ngành gốc", value: program.originalName },
-            { label: "Trạng thái nguồn", value: program.sourceStatus },
-            { label: "Điều kiện / ghi chú điểm", value: program.conditions },
-          ]} />
-          <details>
-            <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-azure">Các ô dữ liệu nguyên văn trong bảng</summary>
-            <p className="mb-3 text-xs leading-relaxed text-muted">Nhãn cột được giữ nguyên. Các ô ước lượng được chuyển sang mục “Kịch bản ước tính”, không trộn với dữ liệu nguồn.</p>
-            <Fields columns={sourceColumns} />
+        <div className="border-t border-line p-3 sm:p-4">
+          <details open data-reference-points>
+            <summary className="min-h-11 cursor-pointer rounded-xl bg-azure px-4 py-3 text-sm font-semibold text-paper shadow-cta focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azure">Điểm tham khảo</summary>
+            <div className="pt-3">
+              {program.conditions ? <p className="mb-3 text-xs leading-relaxed text-muted">Điều kiện: {program.conditions}</p> : null}
+              {sources.length ? <div className="grid gap-3 lg:grid-cols-2">{visibleSources.map((source) => <SourceRecord key={source.row} source={source} />)}</div> : <Fields columns={sourceColumns} />}
+              {!sources.length && !sourceColumns.length ? <p className="text-sm text-muted">Chưa có điểm tham khảo cho ngành này.</p> : null}
+              <Pagination page={sourcePage} count={sources.length} label="nguồn" onChange={setSourcePage} />
+            </div>
           </details>
-          <div>
-            <h4 className="mb-3 text-sm font-semibold text-navy">Dữ liệu nguồn theo phương thức và thang điểm</h4>
-            <p className="mb-3 text-xs leading-relaxed text-muted">Điểm trúng tuyển, điểm sàn và các bản ghi khác nhau được giữ riêng. Xem tổ hợp, điều kiện và phân loại nguồn của từng bản ghi trước khi so sánh.</p>
-            {sources.length ? <div className="space-y-3">{visibleSources.map((source) => <SourceRecord key={source.row} source={source} />)}</div> : <p className="text-sm text-muted">Chưa có bản ghi nguồn liên kết. Không tự gán điểm bằng cách đoán tên ngành.</p>}
-            <Pagination page={sourcePage} count={sources.length} label="nguồn" onChange={setSourcePage} />
-          </div>
         </div>
       ) : null}
     </details>
@@ -171,7 +161,7 @@ function SourcesView({ document }: { document: UniversityAdmissionsDocument }) {
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
         <input className="h-12 w-full rounded-2xl bg-mist pl-10 pr-4 text-sm text-navy outline-none focus-visible:ring-2 focus-visible:ring-azure" aria-label="Tìm ngành hoặc mã ngành" placeholder="Tìm ngành, mã, tổ hợp hoặc phương thức..." value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} />
       </label>
-      <p className="mb-4 text-sm text-muted" role="status">{programs.length} dòng ngành · {document.sources.length} bản ghi nguồn của trường</p>
+      <p className="mb-4 text-sm text-muted" role="status">{programs.length} ngành / chương trình</p>
       <div className="space-y-3" aria-busy={query !== deferredQuery}>
         {visible.map((program) => <ProgramDetails key={program.id} program={program} sourceMap={sourceMap} />)}
       </div>
@@ -226,7 +216,7 @@ function RawRows({ headers, rows, label, searchable = false }: {
 }
 
 function AdmissionsContent({ document }: { document: UniversityAdmissionsDocument }) {
-  const [view, setView] = useState<"source" | "estimates" | "assumptions">("source");
+  const [view, setView] = useState<"source" | "estimates">("source");
   const viewId = useId();
   const programEstimates = useMemo(() => {
     const programs = document.programs.filter((program) => program.columns.some((column) => isEstimateColumn(column.label)));
@@ -238,43 +228,35 @@ function AdmissionsContent({ document }: { document: UniversityAdmissionsDocumen
   }, [document.programs]);
   return (
     <>
-      <div className="rounded-2xl bg-ice p-4 text-sm leading-relaxed text-navy">
-        <Info className="mb-2 size-4 text-azure" aria-hidden="true" />
-        {document.notice}
-        <p className="mt-2 text-xs text-muted">Dữ liệu {document.year} · cập nhật {document.updatedAt} · sheet {document.sheet}</p>
-      </div>
-      <div className="my-4 flex flex-wrap gap-2" role="group" aria-label="Chọn nhóm dữ liệu tuyển sinh">
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Chọn nhóm dữ liệu tuyển sinh">
         {([
-          ["source", "Dữ liệu nguồn"],
-          ["estimates", "Kịch bản ước tính"],
-          ["assumptions", "Giả định & đối chiếu"],
+          ["source", "Ngành và Điểm"],
+          ["estimates", "Điểm giả định"],
         ] as const).map(([id, title]) => (
-          <Button key={id} type="button" size="sm" variant={view === id ? "primary" : "secondary"} aria-pressed={view === id} aria-controls={viewId} onClick={() => setView(id)}>{title}</Button>
+          <Button key={id} type="button" size="sm" variant={view === id ? "primary" : "secondary"} className="min-h-11 font-semibold" aria-pressed={view === id} aria-controls={viewId} onClick={() => setView(id)}>{title}</Button>
         ))}
       </div>
       <div id={viewId}>
         {view === "source" ? <SourcesView document={document} /> : null}
         {view === "estimates" ? (
-          <section aria-label="Kịch bản ước tính riêng" data-admissions-view="estimates">
-            <h3 className="mb-2 font-display text-lg font-semibold text-navy">Ước tính theo giả định, không phải điểm trúng tuyển công bố</h3>
-            <p className="mb-4 rounded-2xl bg-ice p-4 text-sm leading-relaxed text-navy">THPT 18/30 cho tổ hợp thiếu dữ liệu là giả định, không phải trung bình toàn quốc. Mỗi cột suy ngược là một kịch bản riêng; không ghép các kết quả thành một hồ sơ. Giá trị ngoài thang được giữ nguyên kèm cảnh báo, không tự giới hạn về điểm tối đa.</p>
+          <section aria-label="Điểm giả định" data-admissions-view="estimates">
+            <h3 className="mb-2 font-display text-lg font-semibold text-navy">Điểm giả định</h3>
+            <p className="mb-4 text-sm text-muted">Điểm ước lượng theo giả định, không phải điểm trúng tuyển công bố.</p>
             <RawRows headers={document.estimates.headers} rows={document.estimates.rows} label="ước tính" searchable />
-            <h3 className="mb-3 mt-8 font-display text-lg font-semibold text-navy">Ô ước lượng theo chương trình trong bảng</h3>
-            <p className="mb-3 text-sm text-muted">Giữ cả trạng thái thiếu công thức hoặc đầu vào. Không tự tạo điểm khi bảng chưa đủ thông tin.</p>
+            <h3 className="mb-3 mt-8 font-display text-lg font-semibold text-navy">Điểm giả định theo ngành</h3>
             <RawRows headers={programEstimates.headers} rows={programEstimates.rows} label="ước lượng trong bảng" searchable />
-          </section>
-        ) : null}
-        {view === "assumptions" ? (
-          <section aria-label="Giả định và đối chiếu">
-            <h3 className="mb-2 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
-            <p className="mb-4 text-sm leading-relaxed text-muted">{document.assumptions.notice}</p>
-            <RawRows headers={document.assumptions.headers} rows={document.assumptions.rows} label="giả định" searchable />
-            <h3 className="mb-3 mt-8 font-display text-lg font-semibold text-navy">Nhật ký và các dòng cần đối chiếu</h3>
-            <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
+            <details className="mt-6 rounded-2xl border border-line p-4">
+              <summary className="min-h-11 cursor-pointer font-medium text-azure">Đầu vào và đối chiếu</summary>
+              <div className="pt-3">
+                <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
+                <RawRows headers={document.assumptions.headers} rows={document.assumptions.rows} label="giả định" searchable />
+                <h3 className="mb-3 mt-6 font-display text-lg font-semibold text-navy">Các dòng cần đối chiếu</h3>
+                <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
+              </div>
+            </details>
           </section>
         ) : null}
       </div>
-      <p className="mt-6 break-all text-xs text-muted">Tệp gốc: {document.sourceFile}. Nội dung từ các nguồn tổng hợp giữ nguyên phân loại tham khảo; hãy mở liên kết nguồn để đối chiếu điều kiện tuyển sinh.</p>
     </>
   );
 }
@@ -320,7 +302,7 @@ export function UniversityAdmissions({ schoolId, schoolName, open, onOpenChange,
           <div className="flex shrink-0 items-start gap-3 border-b border-line px-4 py-4 sm:px-6">
             <div className="min-w-0 flex-1">
               <Dialog.Title className="font-display text-lg font-semibold leading-snug text-navy sm:text-xl">{schoolName}</Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-muted">Tuyển sinh 2026 · Điểm nguồn và kịch bản ước tính được trình bày riêng</Dialog.Description>
+              <Dialog.Description className="mt-1 text-sm text-muted">Ngành, điểm tham khảo và điểm giả định</Dialog.Description>
             </div>
             <Dialog.Close asChild><button type="button" aria-label="Đóng chi tiết tuyển sinh" className="grid size-11 shrink-0 place-items-center rounded-xl text-navy hover:bg-ice focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure"><X className="size-5" aria-hidden="true" /></button></Dialog.Close>
           </div>

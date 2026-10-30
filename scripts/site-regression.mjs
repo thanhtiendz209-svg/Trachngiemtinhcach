@@ -118,6 +118,57 @@ async function fields(locator) {
   return locator.locator("dt").evaluateAll((elements) => Object.fromEntries(elements.map((element) => [element.textContent.trim(), element.parentElement.querySelector("dd")?.textContent.trim()])));
 }
 
+async function admissionControls(page, active = "Ngành và Điểm", document) {
+  const controls = page.getByRole("group", { name: "Chọn nhóm dữ liệu tuyển sinh", exact: true });
+  assert.deepEqual(await controls.getByRole("button").allTextContents(), ["Ngành và Điểm", "Điểm giả định"], "School data has exactly two clearly labelled views");
+  for (const name of ["Ngành và Điểm", "Điểm giả định"]) {
+    assert.equal(await controls.getByRole("button", { name, exact: true }).getAttribute("aria-pressed"), String(name === active));
+  }
+  for (const text of [
+    document?.notice,
+    "Nhãn cột được giữ nguyên. Các ô ước lượng được chuyển sang mục “Kịch bản ước tính”, không trộn với dữ liệu nguồn.",
+    "Điểm trúng tuyển, điểm sàn và các bản ghi khác nhau được giữ riêng. Xem tổ hợp, điều kiện và phân loại nguồn của từng bản ghi trước khi so sánh.",
+    "THPT 18/30 cho tổ hợp thiếu dữ liệu là giả định, không phải trung bình toàn quốc. Mỗi cột suy ngược là một kịch bản riêng; không ghép các kết quả thành một hồ sơ. Giá trị ngoài thang được giữ nguyên kèm cảnh báo, không tự giới hạn về điểm tối đa.",
+    "Giữ cả trạng thái thiếu công thức hoặc đầu vào. Không tự tạo điểm khi bảng chưa đủ thông tin.",
+  ].filter(Boolean)) {
+    assert.equal(await page.getByText(text, { exact: true }).count(), 0, "Removed explanatory blocks must stay out of the compact school view");
+  }
+  assert.equal(await page.getByText(/^Tệp gốc:/).count(), 0, "The source-file footer is removed");
+}
+
+async function referencePoints(program) {
+  const panel = program.locator("details[data-reference-points]");
+  await visible(panel);
+  assert.equal(await panel.count(), 1, "Each expanded program has one reference-points panel");
+  assert.notEqual(await panel.getAttribute("open"), null, "Reference points are open immediately after opening a program");
+  const summary = panel.locator(":scope > summary");
+  assert.equal((await summary.textContent()).trim(), "Điểm tham khảo");
+  assert.equal(await summary.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const programSummary = element.closest("[data-program-id]").querySelector(":scope > summary");
+    return Number(style.fontWeight) >= 600 && style.backgroundColor !== "rgba(0, 0, 0, 0)"
+      && style.backgroundColor !== getComputedStyle(programSummary).backgroundColor && style.color !== style.backgroundColor;
+  }), true, "Reference points have an emphasized, contrasting summary");
+  const labels = await program.locator("dt").allTextContents();
+  for (const label of ["Chương trình / nguồn gốc", "Đối chiếu ngành", "Mã ngành gốc", "Tên ngành gốc", "Trạng thái nguồn"]) {
+    assert.equal(labels.includes(label), false, "Program-origin metadata is removed above reference points");
+  }
+  assert.equal(await program.getByText("Các ô dữ liệu nguyên văn trong bảng", { exact: true }).count(), 0, "Source records replace the duplicate raw-program block");
+  assert.equal((await program.locator("dt").allTextContents()).filter((label) => /ước lượng|ước tính/i.test(label)).length, 0, "Estimate-labelled cells must not be mixed into reference points");
+  return panel;
+}
+
+async function openAssumptions(page) {
+  const estimates = page.locator('[data-admissions-view="estimates"]');
+  const details = estimates.locator("details").filter({ has: page.locator("summary", { hasText: /^Đầu vào và đối chiếu$/ }) });
+  assert.equal(await details.count(), 1, "Assumptions and verification share one nested disclosure");
+  assert.equal(await details.getAttribute("open"), null, "Assumptions start collapsed inside the estimates view");
+  assert.equal(await details.getByRole("heading", { name: "Đầu vào và giả định", exact: true }).isVisible(), false);
+  await details.locator(":scope > summary").click();
+  await visible(details.getByRole("heading", { name: "Đầu vào và giả định", exact: true }));
+  return details;
+}
+
 async function paginate(scope, rowSelector, keyAttribute, nextLabel) {
   const found = [];
   for (let pageNumber = 0; pageNumber < 150; pageNumber++) {
@@ -254,6 +305,7 @@ try {
 
     await check("HUST source pagination, CH1 cutoff and separate estimates retain every row", async () => {
       const document = await page.request.get(`${origin}/admissions/2026/uni-001.json`).then((response) => response.json());
+      await admissionControls(page, "Ngành và Điểm", document);
       const sourceView = page.getByRole("region", { name: "Ngành và dữ liệu nguồn", exact: true });
       const ids = await paginate(sourceView, "details[data-program-id]", "data-program-id", "Trang ngành sau");
       assert.deepEqual(ids, document.programs.map((program) => program.id), "Every program row, including repeated codes/variants, remains reachable");
@@ -262,7 +314,8 @@ try {
       await sourceView.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("CH1");
       const program = sourceView.locator('[data-program-id="uni-001-row-16"]');
       await program.locator(":scope > summary").click();
-      const thpt = program.locator('[data-source-row="28"]');
+      const reference = await referencePoints(program);
+      const thpt = reference.locator('[data-source-row="28"]');
       await visible(thpt);
       const thptFields = await fields(thpt);
       assert.equal(thptFields["Phương thức"], "Điểm thi THPT");
@@ -271,25 +324,30 @@ try {
       assert.equal(thptFields["Loại dữ liệu"], "Trúng tuyển");
       assert.match(thptFields["Phân loại"], /tham khảo/);
       assert.match(await thpt.getByRole("link", { name: "Xem nguồn", exact: true }).getAttribute("href"), /^https:\/\//);
-      const tsa = await fields(program.locator('[data-source-row="111"]'));
+      const tsa = await fields(reference.locator('[data-source-row="111"]'));
       assert.equal(tsa["Thang điểm"], "100");
       assert.equal(Number(tsa["Giá trị trong nguồn"]), 58.81);
-      await program.getByText("Các ô dữ liệu nguyên văn trong bảng", { exact: true }).click();
-      assert.equal((await program.locator("dt").allTextContents()).filter((label) => /ước lượng|ước tính/i.test(label)).length, 0, "Estimate-labelled cells must not be mixed into source facts");
+      assert.equal(await reference.locator("[data-source-row]").count(), document.programs.find((entry) => entry.id === "uni-001-row-16").sourceRows.length);
+      await reference.locator(":scope > summary").click();
+      assert.equal(await thpt.isVisible(), false, "Reference points can be collapsed independently");
+      await reference.locator(":scope > summary").click();
+      await visible(thpt);
       await thpt.scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/school-hust-source-desktop.png` });
-      await page.getByRole("button", { name: "Kịch bản ước tính", exact: true }).click();
+      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
+      await admissionControls(page, "Điểm giả định", document);
       const estimates = page.locator('[data-admissions-view="estimates"]');
-      await visible(estimates.getByRole("heading", { name: "Ước tính theo giả định, không phải điểm trúng tuyển công bố", exact: true }));
-      assert.equal(await page.getByRole("button", { name: "Dữ liệu nguồn", exact: true }).getAttribute("aria-pressed"), "false");
+      await visible(estimates.getByRole("heading", { name: "Điểm giả định", exact: true }));
       assert.equal(await sourceView.count(), 0);
       await estimates.getByRole("textbox", { name: "Tìm ước lượng trong bảng", exact: true }).fill("CH1");
-      const estimateRow = estimates.locator("details").filter({ has: page.locator("summary", { hasText: /^CH1\b/ }) }).first();
+      const estimateRow = estimates.locator('[data-raw-kind="ước lượng trong bảng"] details[data-raw-row]').filter({ has: page.locator("summary", { hasText: /^CH1\b/ }) }).first();
       await estimateRow.locator(":scope > summary").click();
       await visible(estimateRow.getByText("THPT ước lượng /30", { exact: true }));
       await visible(estimateRow.getByText("Chưa đủ công thức/đầu vào", { exact: true }));
-      await page.getByRole("button", { name: "Giả định & đối chiếu", exact: true }).click();
-      await visible(page.getByRole("heading", { name: "Đầu vào và giả định", exact: true }));
+      const assumptions = await openAssumptions(page);
+      const assumptionRows = await paginate(assumptions.locator('[data-raw-kind="giả định"]'), "details[data-raw-row]", "data-raw-row", "Trang giả định sau");
+      assert.deepEqual(assumptionRows.map(Number), document.assumptions.rows.map((_, index) => index), "Every assumption remains accessible inside estimates");
+      report.admissionsResults.hustAssumptions = assumptionRows.length;
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
       await page.reload({ waitUntil: "domcontentloaded" });
       await ready(page);
@@ -302,8 +360,9 @@ try {
       await page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("7310101_2");
       const program = page.locator('[data-program-id="uni-002-row-128"]');
       await program.locator(":scope > summary").click();
-      await visible(program.getByText("Bổ sung từ nguồn tuyển sinh 2026", { exact: true }));
-      const source = program.locator('[data-source-row="10247"]');
+      const reference = await referencePoints(program);
+      assert.equal(await program.getByText("Bổ sung từ nguồn tuyển sinh 2026", { exact: true }).count(), 0, "New-program metadata no longer precedes the points");
+      const source = reference.locator('[data-source-row="10247"]');
       await visible(source);
       const values = await fields(source);
       assert.equal(values["Phương thức"], "Điểm thi THPT");
@@ -314,23 +373,42 @@ try {
       await page.screenshot({ path: `${out}/school-neu-new-program-desktop.png` });
     });
 
-    await check("source facts spanning multiple pages stay reachable", async () => {
+    await check("source facts and nested verification spanning multiple pages stay reachable", async () => {
       await navigate(page, `${origin}/truong-dai-hoc/uni-003`);
       await page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("NTHCN18");
       const program = page.locator('[data-program-id="uni-003-row-95"]');
       await program.locator(":scope > summary").click();
-      await visible(program.locator("[data-source-row]"));
-      const rows = await paginate(program, "[data-source-row]", "data-source-row", "Trang nguồn sau");
+      const reference = await referencePoints(program);
+      await visible(reference.locator("[data-source-row]"));
+      const rows = await paginate(reference, "[data-source-row]", "data-source-row", "Trang nguồn sau");
       const document = await page.request.get(`${origin}/admissions/2026/uni-003.json`).then((response) => response.json());
       assert.deepEqual(rows.map(Number), document.programs.find((entry) => entry.id === "uni-003-row-95").sourceRows);
       report.admissionsResults.ftuSources = rows.length;
+      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
+      const assumptions = await openAssumptions(page);
+      const verificationRows = await paginate(assumptions.locator('[data-raw-kind="đối chiếu"]'), "details[data-raw-row]", "data-raw-row", "Trang đối chiếu sau");
+      assert.deepEqual(verificationRows.map(Number), document.verification.rows.map((_, index) => index), "Every verification row remains accessible without a third view button");
+      report.admissionsResults.ftuVerification = verificationRows.length;
+    });
+
+    await check("programs without linked records show original points in the same reference panel", async () => {
+      await navigate(page, `${origin}/truong-dai-hoc/uni-086`);
+      await page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("7140222");
+      const program = page.locator('[data-program-id="uni-086-row-16"]');
+      await program.locator(":scope > summary").click();
+      const reference = await referencePoints(program);
+      assert.equal(await reference.locator("[data-source-row]").count(), 0);
+      const values = await fields(reference);
+      assert.equal(Number(values["Sàn THPT\n/30"]), 16.5, "Keep an original floor labelled as a floor when no linked source record exists");
+      report.admissionsResults.sourceLessFloor = { program: "uni-086-row-16", point: 16.5 };
     });
 
     await check("all HCMUT estimate scenarios stay separate, paginated and unclamped", async () => {
       await navigate(page, `${origin}/truong-dai-hoc/uni-068`);
-      await page.getByRole("button", { name: "Kịch bản ước tính", exact: true }).click();
+      await admissionControls(page);
+      await page.getByRole("button", { name: "Điểm giả định", exact: true }).click();
       const estimates = page.locator('[data-admissions-view="estimates"]');
-      await visible(estimates.getByRole("heading", { name: "Ước tính theo giả định, không phải điểm trúng tuyển công bố", exact: true }));
+      await visible(estimates.getByRole("heading", { name: "Điểm giả định", exact: true }));
       const scenarios = estimates.locator('[data-raw-kind="ước tính"]');
       const rows = await paginate(scenarios, "details[data-raw-row]", "data-raw-row", "Trang ước tính sau");
       const document = await page.request.get(`${origin}/admissions/2026/uni-068.json`).then((response) => response.json());
@@ -476,17 +554,23 @@ try {
       await explorer.getByRole("link", { name: "Xem ngành & điểm", exact: true }).click();
       await mobilePage.waitForURL("**/truong-dai-hoc/uni-001");
       await ready(mobilePage);
+      await admissionControls(mobilePage);
       await mobilePage.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
       await mobilePage.screenshot({ path: `${out}/school-hust-page-mobile.png` });
       await mobilePage.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).fill("CH1");
       const program = mobilePage.locator('[data-program-id="uni-001-row-16"]');
       await program.locator(":scope > summary").click();
-      await visible(program.locator('[data-source-row="28"]'));
-      await program.locator('[data-source-row="28"]').scrollIntoViewIfNeeded();
+      const reference = await referencePoints(program);
+      const thpt = reference.locator('[data-source-row="28"]');
+      await visible(thpt);
+      assert.equal(Number((await fields(thpt))["Giá trị trong nguồn"]), 25.5, "Mobile users see reference points immediately after opening a program");
+      await reference.locator(":scope > summary").scrollIntoViewIfNeeded();
       assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Source fields fit a mobile screen");
       await mobilePage.screenshot({ path: `${out}/school-hust-source-mobile.png` });
       await navigate(mobilePage, `${origin}/truong-dai-hoc/uni-068`);
-      await mobilePage.getByRole("button", { name: "Kịch bản ước tính", exact: true }).click();
+      await mobilePage.getByRole("button", { name: "Điểm giả định", exact: true }).click();
+      await admissionControls(mobilePage, "Điểm giả định");
+      await visible(mobilePage.locator('[data-admissions-view="estimates"]').getByRole("heading", { name: "Điểm giả định", exact: true }));
       const scenarios = mobilePage.locator('[data-admissions-view="estimates"] [data-raw-kind="ước tính"]');
       await scenarios.getByRole("textbox", { name: "Tìm ước tính", exact: true }).fill("Tài nguyên và Môi trường");
       const estimate = scenarios.locator('[data-raw-row="47"]');
