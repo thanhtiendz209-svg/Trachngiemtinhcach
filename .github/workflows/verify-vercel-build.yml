@@ -1,0 +1,125 @@
+name: Verify fresh Vercel production build
+
+on:
+  push:
+    branches: [fix-vercel-build]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare isolated workspace and reject stale build output
+        run: |
+          set -euo pipefail
+          sudo mkdir -p /workspace
+          sudo chown "$USER":"$USER" /workspace
+          cp -a "$GITHUB_WORKSPACE"/. /workspace/
+          cd /workspace
+          mkdir -p screenshots
+          tracked_vercel_files=$(git ls-files -- .vercel)
+          test -z "$tracked_vercel_files"
+          test ! -e .vercel/output
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const config = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+          assert.equal(config.framework, 'tanstack-start');
+          assert.equal(config.buildCommand, 'npm run build');
+          NODE
+      - name: Install only production dependencies
+        working-directory: /workspace
+        run: npm ci --omit=dev --no-audit --no-fund 2>&1 | tee screenshots/production-install.log
+      - name: Run the configured Vercel build command
+        working-directory: /workspace
+        run: npm run build 2>&1 | tee screenshots/production-build.log
+      - name: Verify generated server routes and every emitted school document
+        working-directory: /workspace
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const output = '.vercel/output';
+          const config = JSON.parse(fs.readFileSync(path.join(output, 'config.json'), 'utf8'));
+          assert.equal(config.version, 3, 'Build Output API version');
+          assert.ok(config.routes.some((route) => route.dest === '/__server'), 'Requests must reach the generated SSR function');
+          const server = path.join(output, 'functions/__server.func');
+          const functionConfig = JSON.parse(fs.readFileSync(path.join(server, '.vc-config.json'), 'utf8'));
+          assert.ok(fs.existsSync(path.join(server, functionConfig.handler)), 'Generated SSR entry must exist');
+          const manifestFiles = fs.readdirSync(server).filter((file) => /^_tanstack-start-manifest.*\.mjs$/.test(file));
+          assert.equal(manifestFiles.length, 1, 'Exactly one freshly generated route manifest');
+          const manifest = fs.readFileSync(path.join(server, manifestFiles[0]), 'utf8');
+          for (const route of ['/truong-dai-hoc/', '/truong-dai-hoc/$universityId']) {
+            assert.ok(manifest.includes(route), `Generated manifest is missing ${route}`);
+          }
+          const serverChunks = fs.readdirSync(path.join(server, '_ssr'));
+          assert.ok(serverChunks.some((file) => file.startsWith('truong-dai-hoc.index-')), 'Compile the school index route');
+          assert.ok(serverChunks.some((file) => file.startsWith('truong-dai-hoc._universityId-')), 'Compile the school detail route');
+
+          const sourceDir = 'public/admissions/2026';
+          const emittedDir = path.join(output, 'static/admissions/2026');
+          const expectedFiles = Array.from({ length: 126 }, (_, index) => `uni-${String(index + 1).padStart(3, '0')}.json`);
+          const sourceFiles = fs.readdirSync(sourceDir).filter((file) => file.endsWith('.json')).sort();
+          const emittedFiles = fs.readdirSync(emittedDir).filter((file) => file.endsWith('.json')).sort();
+          assert.deepEqual(sourceFiles, expectedFiles, 'Keep all 126 source school documents');
+          assert.deepEqual(emittedFiles, expectedFiles, 'Ship all 126 school documents in Vercel static output');
+          for (const file of expectedFiles) {
+            assert.ok(fs.readFileSync(path.join(sourceDir, file)).equals(fs.readFileSync(path.join(emittedDir, file))), `Emitted content changed for ${file}`);
+          }
+          const result = {
+            ok: true,
+            manifest: manifestFiles[0],
+            schoolRoutesCompiled: true,
+            schoolDocuments: emittedFiles.length,
+            exactSourceContent: true,
+          };
+          fs.writeFileSync('screenshots/build-output-check.json', JSON.stringify(result, null, 2));
+          console.log(JSON.stringify(result, null, 2));
+          NODE
+      - name: Restore browser QA dependencies
+        working-directory: /workspace
+        run: |
+          npm ci --no-audit --no-fund 2>&1 | tee screenshots/qa-install.log
+          npx playwright install --with-deps chromium
+      - name: Render the generated production server on desktop and mobile
+        working-directory: /workspace
+        run: |
+          npm run preview:restart
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/production.png
+      - name: Verify school pages and existing quiz features
+        working-directory: /workspace
+        env:
+          SITE_EXPECT_FIXES: '1'
+          SITE_ADMISSIONS_2026: '1'
+          SITE_REVISION: vercel-build
+        run: node scripts/site-regression.mjs http://127.0.0.1:8081/
+      - name: Preserve preview diagnostics
+        if: always()
+        working-directory: /workspace
+        run: |
+          if [ -f .grok/preview.log ]; then
+            cp .grok/preview.log screenshots/preview.log
+          fi
+      - name: Preserve build and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-build-verification-${{ github.run_attempt }}
+          path: /workspace/screenshots/
+          if-no-files-found: warn
