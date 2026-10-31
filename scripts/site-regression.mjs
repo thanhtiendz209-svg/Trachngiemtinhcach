@@ -685,6 +685,14 @@ try {
           await majorPage.waitForFunction(() => document.querySelector("[data-major-filter-list]")?.clientHeight >= 44, null, { timeout: 5000 });
           const selectedPopupBounds = await popup.boundingBox();
           assert.ok(selectedPopupBounds.y >= 0 && selectedPopupBounds.y + selectedPopupBounds.height <= viewport.height + 1);
+          await majorPage.waitForFunction(() => {
+            const list = document.querySelector("[data-major-filter-list]");
+            const option = list?.querySelector('[aria-selected="true"]');
+            if (!list || !option) return false;
+            const bounds = list.getBoundingClientRect();
+            const selected = option.getBoundingClientRect();
+            return selected.top >= bounds.top - 1 && selected.top < bounds.bottom;
+          }, null, { timeout: 5000 });
           if (name === "landscape") await majorPage.screenshot({ path: `${out}/major-filter-landscape-long-selection.png` });
           await input.press("Escape");
           await popup.waitFor({ state: "detached" });

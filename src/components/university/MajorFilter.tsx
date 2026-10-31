@@ -97,11 +97,11 @@ export function MajorFilter({
     if (!element || !list.current) return;
     const top = element.offsetTop;
     const bottom = top + element.offsetHeight;
-    if (top < list.current.scrollTop) list.current.scrollTop = top;
+    if (element.offsetHeight > list.current.clientHeight || top < list.current.scrollTop) list.current.scrollTop = top;
     else if (bottom > list.current.scrollTop + list.current.clientHeight) {
       list.current.scrollTop = bottom - list.current.clientHeight;
     }
-  }, [active, activeIsVisible, compact, id, open, start]);
+  }, [active, activeIsVisible, compact, id, open, popup, start]);
 
   function openList(next: boolean) {
     if (next) {
