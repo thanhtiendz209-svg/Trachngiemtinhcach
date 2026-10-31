@@ -16,7 +16,7 @@ function UniversitiesPage() {
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-azure">Tra cứu trường và ngành</p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-navy sm:text-4xl">126 trường đại học & học viện</h1>
-          <p className="mt-3 max-w-2xl text-muted">Mỗi trường có một trang riêng để xem ngành đào tạo, điểm tuyển sinh 2026, phương thức xét tuyển và nguồn đối chiếu. Các kịch bản ước lượng được trình bày riêng.</p>
+          <p className="mt-3 max-w-2xl text-muted">Xem ngành đào tạo, điểm trúng tuyển, điểm sàn và nguồn đối chiếu trong trang riêng của từng trường.</p>
         </div>
       </div>
       <UniversityExplorer riasec={profile?.riasec} />

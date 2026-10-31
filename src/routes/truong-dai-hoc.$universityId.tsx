@@ -8,11 +8,14 @@ import { UniversityAdmissionsPanel } from "@/components/university/UniversityAdm
 import { UNIVERSITIES } from "@/data/universities";
 
 export const Route = createFileRoute("/truong-dai-hoc/$universityId")({
-  validateSearch: (search: Record<string, unknown>): { nganh?: string } => ({
-    nganh: typeof search.nganh === "string" && search.nganh.trim().length <= 120
-      ? search.nganh.normalize("NFC").trim() || undefined
-      : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { nganh?: string } => {
+    // The router parses an unquoted numeric search value as a number. Both
+    // national numeric codes and alphanumeric school codes must deep-link.
+    const code = typeof search.nganh === "string" ? search.nganh
+      : typeof search.nganh === "number" && Number.isSafeInteger(search.nganh) && search.nganh >= 0
+        ? String(search.nganh) : "";
+    return { nganh: code.trim().length <= 120 ? code.normalize("NFC").trim() || undefined : undefined };
+  },
   head: () => ({ meta: [{ title: "Ngành và điểm tuyển sinh 2026 | Lumina" }] }),
   component: UniversityPage,
 });
