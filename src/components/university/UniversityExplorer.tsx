@@ -19,6 +19,7 @@ import {
 } from "@/lib/university";
 import { cn } from "@/lib/utils";
 import { UniversityCard } from "./UniversityCard";
+import { MajorFilter } from "./MajorFilter";
 
 function Chip({
   active,
@@ -342,28 +343,17 @@ export function UniversityExplorer({
           </FilterRow>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-azure">Ngành</span>
-              <select
-                value={major}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setMajor(next);
-                  if (next !== "all") {
-                    const g = MAJOR_GROUPS.find((x) => x.examples.includes(next));
-                    if (g) setGroupId(g.id);
-                  }
-                }}
-                className="h-12 w-full rounded-[16px] bg-mist px-3 text-sm text-navy outline-none focus:shadow-border"
-              >
-                <option value="all">Tất cả ngành</option>
-                {majorNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <MajorFilter
+              options={majorNames}
+              value={major}
+              onValueChange={(next) => {
+                setMajor(next);
+                if (next !== "all") {
+                  const g = MAJOR_GROUPS.find((x) => x.examples.includes(next));
+                  if (g) setGroupId(g.id);
+                }
+              }}
+            />
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-azure">
                 Phương thức xét tuyển

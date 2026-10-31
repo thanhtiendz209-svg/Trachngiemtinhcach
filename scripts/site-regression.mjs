@@ -22,6 +22,7 @@ const report = {
   universityResults: {},
   admissionsResults: {},
   stage1Results: {},
+  majorFilterResults: [],
   pageErrors: [],
 };
 mkdirSync(out, { recursive: true });
@@ -605,6 +606,94 @@ try {
         await generic.waitForTimeout(300);
         await generic.screenshot({ path: `${out}/stage1-bigfive-generic-mobile.png` });
       } finally { await isolated.close(); }
+    });
+  }
+
+  if (stage1 && admissions2026) {
+    await check("major filter search, long labels, paging, keyboard and viewport boundaries", async () => {
+      const aviation = "Chỉ huy tham mưu Không quân / Phi công quân sự / Thiết bị bay không người lái";
+      const longName = admissionsUniversities.flatMap((school) => school.majors).find((name) => name.startsWith("Quản trị dịch vụ du lịch và lữ hành (ST - Tiêu chuẩn)"));
+      assert.ok(longName && longName.length > 150);
+      for (const [name, viewport] of Object.entries({ desktop: { width: 1280, height: 800 }, mobile: { width: 390, height: 844 }, landscape: { width: 844, height: 360 } })) {
+        const isolated = await browser.newContext({ viewport, reducedMotion: "reduce", ...(name === "desktop" ? {} : { isMobile: true, hasTouch: true }) });
+        const majorPage = await isolated.newPage();
+        observeErrors(majorPage);
+        try {
+          await navigate(majorPage, `${origin}${name === "desktop" ? "/huong-nghiep" : "/truong-dai-hoc"}`);
+          const explorer = majorPage.locator("#bo-loc-truong");
+          const trigger = explorer.getByRole("button", { name: "Ngành", exact: true });
+          await visible(trigger);
+          assert.match(await trigger.textContent(), /Tất cả ngành/);
+          await trigger.focus();
+          await trigger.press("ArrowDown");
+          const popup = majorPage.locator("[data-major-filter-popup]");
+          const input = popup.getByRole("combobox", { name: "Tìm ngành", exact: true });
+          const options = popup.getByRole("option");
+          await visible(input);
+          const firstCount = await options.count();
+          assert.ok(firstCount > 0 && firstCount <= 81, "Opening a large catalogue mounts a bounded page of options");
+          assert.equal(await input.evaluate((element) => element === document.activeElement), true);
+          const firstValue = await options.first().getAttribute("data-major-option");
+          if (name === "desktop") {
+            await popup.getByRole("button", { name: "Xem thêm ngành", exact: true }).click();
+            assert.notEqual(await options.first().getAttribute("data-major-option"), firstValue);
+            assert.ok(await options.count() <= 81);
+            await popup.getByRole("button", { name: "Xem nhóm ngành trước", exact: true }).click();
+            assert.equal(await options.first().getAttribute("data-major-option"), firstValue);
+            await input.press("End");
+            const lastId = await input.getAttribute("aria-activedescendant");
+            const lastOption = majorPage.locator(`[id="${lastId}"]`);
+            assert.equal(await lastOption.getAttribute("aria-posinset"), await lastOption.getAttribute("aria-setsize"), "Keyboard can reach the final catalogue option beyond the first page");
+            assert.ok(await options.count() <= 81);
+            await input.press("Home");
+            assert.equal(await options.first().getAttribute("data-major-option"), firstValue);
+          }
+          await input.fill("zzzz-no-major-98341");
+          await majorPage.waitForFunction(() => document.querySelectorAll("[data-major-filter-popup] [role=option]").length === 0);
+          await input.fill("phi cong quan su");
+          const item = popup.getByRole("option", { name: aviation, exact: true });
+          await visible(item);
+          const bounds = await popup.boundingBox();
+          assert.ok(bounds.x >= 8 && bounds.y >= 0 && bounds.x + bounds.width <= viewport.width - 7 && bounds.y + bounds.height <= viewport.height + 1, JSON.stringify({ viewport, bounds }));
+          assert.equal(await item.evaluate((element) => element.scrollWidth <= element.clientWidth + 1), true, "The full long option wraps without horizontal clipping");
+          assert.notEqual(await item.evaluate((element) => getComputedStyle(element).whiteSpace), "nowrap");
+          assert.equal(await majorPage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+          await majorPage.screenshot({ path: `${out}/major-filter-${name}.png` });
+          await item.click();
+          await popup.waitFor({ state: "detached" });
+          assert.ok((await trigger.textContent()).includes(aviation));
+          const expected = admissionsUniversities.filter((school) => school.majors.includes(aviation)).map((school) => school.id).sort();
+          await majorPage.waitForFunction((count) => document.querySelectorAll("#bo-loc-truong article").length === count, Math.min(12, expected.length));
+          const actual = await explorer.locator('article a[href^="/truong-dai-hoc/uni-"]').evaluateAll((links) => links.map((link) => new URL(link.href).pathname.split("/").pop()).sort());
+          assert.deepEqual(actual, expected, "Selecting a full major name preserves the exact original university filter");
+          await trigger.click();
+          await visible(input);
+          await input.fill(longName);
+          await visible(popup.getByRole("option", { name: longName, exact: true }));
+          await input.press("ArrowDown");
+          const activeId = await input.getAttribute("aria-activedescendant");
+          assert.ok(activeId);
+          assert.equal(await majorPage.locator(`[id="${activeId}"]`).getAttribute("data-major-option"), longName);
+          await input.press("Enter");
+          await popup.waitFor({ state: "detached" });
+          assert.ok((await trigger.textContent()).includes(longName), "Long selected labels remain complete");
+          assert.equal(await trigger.evaluate((element) => element.scrollWidth <= element.clientWidth + 1), true);
+          await trigger.click();
+          await visible(input);
+          await input.press("Escape");
+          await popup.waitFor({ state: "detached" });
+          assert.equal(await trigger.evaluate((element) => element === document.activeElement), true, "Escape restores focus to the major control");
+          await explorer.getByRole("button", { name: "Xóa bộ lọc", exact: true }).click();
+          assert.match(await trigger.textContent(), /Tất cả ngành/);
+          await trigger.click();
+          await visible(input);
+          const outsideInput = explorer.getByRole("textbox", { name: "Tìm trường", exact: true });
+          await outsideInput.click();
+          await popup.waitFor({ state: "detached" });
+          assert.equal(await outsideInput.evaluate((element) => element === document.activeElement), true, "Closing by an outside click preserves the clicked field's focus");
+          report.majorFilterResults.push({ viewport: name, initialOptions: firstCount, accentInsensitiveSearch: true, originalFilterResults: expected, keyboardSelection: true, fullLongLabels: true, viewportContained: true });
+        } finally { await isolated.close(); }
+      }
     });
   }
 
