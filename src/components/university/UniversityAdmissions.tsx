@@ -9,6 +9,8 @@ import type {
   UniversityAdmissionsDocument,
 } from "@/data/university-admissions-types";
 import { loadUniversityAdmissions } from "@/lib/university-admissions";
+import { getSchoolAdmissionIndex, type CanonicalProgram } from "@/lib/admission-identities";
+import { getProgramAdmissionFacts, type WorkbookAdmissionFact } from "@/lib/admission-facts";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 12;
@@ -23,10 +25,6 @@ export interface UniversityAdmissionsProps {
 
 function cellText(value: AdmissionCell | undefined) {
   return value == null || value === "" ? "Chưa có dữ liệu" : String(value);
-}
-
-function isEstimateColumn(label: string) {
-  return /ước\s*(lượng|tính)/i.test(label);
 }
 
 function SourceLink({ value, label }: { value: string; label: string }) {
@@ -82,9 +80,13 @@ function Pagination({ page, count, label, onChange }: {
   );
 }
 
-const SourceRecord = memo(function SourceRecord({ source }: { source: AdmissionSourceRecord }) {
+const SourceRecord = memo(function SourceRecord({ source, floorScope }: {
+  source: AdmissionSourceRecord;
+  floorScope?: "program" | "school";
+}) {
   return (
-    <article className="rounded-xl border border-line p-3 sm:p-4" data-source-row={source.row}>
+    <article className="rounded-xl border border-line p-3 sm:p-4" data-source-row={floorScope ? undefined : source.row} data-floor-source-row={floorScope ? source.row : undefined} data-floor-scope={floorScope}>
+      {floorScope ? <p className="mb-3 text-xs font-semibold leading-relaxed text-azure">{floorScope === "school" ? "Áp dụng chung toàn trường (mã *)" : "Theo mã chương trình"} · {source.schoolCode} · {source.code}</p> : null}
       <Fields compact columns={[
         { label: "Giá trị trong nguồn", value: source.value, prominent: true },
         { label: "Thang điểm", value: source.scale },
@@ -103,9 +105,31 @@ const SourceRecord = memo(function SourceRecord({ source }: { source: AdmissionS
   );
 });
 
-const ProgramDetails = memo(function ProgramDetails({ program, sourceMap }: {
+const WorkbookFact = memo(function WorkbookFact({ fact }: { fact: WorkbookAdmissionFact }) {
+  return (
+    <article className="rounded-xl border border-line p-3 sm:p-4" data-workbook-fact={fact.id} data-workbook-column={fact.label} data-admission-kind={fact.kind} data-fact-kind={fact.kind} data-fact-scale={fact.scale ?? undefined}>
+      <p className="mb-3 whitespace-pre-line text-xs font-semibold text-azure">{fact.label}</p>
+      {!fact.floorSources.length ? <Fields compact columns={[
+        { label: "Giá trị trong bảng", value: fact.value, prominent: true },
+        { label: "Thang điểm", value: fact.scale ?? "Chưa xác định" },
+        ...(fact.method ? [{ label: "Phương thức", value: fact.method, wide: true }] : []),
+        { label: "Loại dữ liệu", value: fact.kind },
+        { label: "Năm", value: fact.year },
+      ]} /> : null}
+      {fact.floorSources.length ? <div className="space-y-3">{fact.floorSources.map(({ source, scope }, index) => <SourceRecord key={`${source.row}-${scope}-${index}`} source={source} floorScope={scope} />)}</div> : null}
+      <details className="mt-2 text-xs text-muted">
+        <summary className="min-h-11 cursor-pointer py-3 font-medium text-azure">Đối chiếu ô trong bảng</summary>
+        <p className="break-words leading-relaxed">{fact.classification} · {fact.provenance.sourceFile} · sheet {fact.provenance.sheet} · dòng {fact.provenance.programRow ?? fact.provenance.programRowId} · cột “{fact.provenance.column.replace(/\s+/gu, " ")}”.</p>
+      </details>
+    </article>
+  );
+});
+
+const ProgramDetails = memo(function ProgramDetails({ program, sourceMap, document, canonical }: {
   program: AdmissionProgramRow;
   sourceMap: Map<number, AdmissionSourceRecord>;
+  document: UniversityAdmissionsDocument;
+  canonical?: CanonicalProgram;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [sourcePage, setSourcePage] = useState(1);
@@ -114,9 +138,12 @@ const ProgramDetails = memo(function ProgramDetails({ program, sourceMap }: {
     [program.sourceRows, sourceMap],
   );
   const visibleSources = sources.slice((sourcePage - 1) * PAGE_SIZE, sourcePage * PAGE_SIZE);
-  const sourceColumns = useMemo(() => program.columns.filter((column) => !isEstimateColumn(column.label)), [program.columns]);
+  const facts = useMemo(() => getProgramAdmissionFacts(document, program, sources), [document, program, sources]);
+  const cutoffSources = visibleSources.filter((source) => source.kind.trim() === "Trúng tuyển");
+  const floorSources = visibleSources.filter((source) => /^(Điểm sàn|Sàn)$/u.test(source.kind.trim()));
+  const otherSources = visibleSources.filter((source) => !cutoffSources.includes(source) && !floorSources.includes(source));
   return (
-    <details className="rounded-2xl bg-card shadow-border" onToggle={(event) => setExpanded(event.currentTarget.open)} data-program-id={program.id} data-program-code={program.code}>
+    <details className="rounded-2xl bg-card shadow-border" onToggle={(event) => setExpanded(event.currentTarget.open)} data-program-id={program.id} data-program-code={program.code} data-program-key={canonical?.id} data-offering-id={canonical?.offeringId}>
       <summary className="min-h-11 cursor-pointer rounded-2xl p-4 text-sm text-navy focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure">
         <span className="font-semibold">{program.code || "Chưa có mã"} · {program.name}</span>
         <span className="mt-1 block text-xs leading-relaxed text-muted">{program.combinations || "Chưa có tổ hợp"}</span>
@@ -127,8 +154,37 @@ const ProgramDetails = memo(function ProgramDetails({ program, sourceMap }: {
             <summary className="min-h-11 cursor-pointer rounded-xl bg-azure px-4 py-3 text-sm font-semibold text-paper shadow-cta focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-azure">Điểm tham khảo</summary>
             <div className="pt-3">
               {program.conditions ? <p className="mb-3 text-xs leading-relaxed text-muted">Điều kiện: {program.conditions}</p> : null}
-              {sources.length ? <div className="grid gap-3 lg:grid-cols-2">{visibleSources.map((source) => <SourceRecord key={source.row} source={source} />)}</div> : <Fields columns={sourceColumns} />}
-              {!sources.length && !sourceColumns.length ? <p className="text-sm text-muted">Chưa có điểm tham khảo cho ngành này.</p> : null}
+              {cutoffSources.length || facts.cutoffs.length ? (
+                <section className="mb-5" aria-label="Điểm trúng tuyển" data-admission-section="cutoffs">
+                  <h4 className="mb-3 text-sm font-semibold text-navy">Điểm trúng tuyển</h4>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {cutoffSources.map((source) => <SourceRecord key={source.row} source={source} />)}
+                    {facts.cutoffs.map((fact) => <WorkbookFact key={fact.id} fact={fact} />)}
+                  </div>
+                </section>
+              ) : null}
+              {floorSources.length || facts.floors.length ? (
+                <section className="mb-5" aria-label="Điểm sàn" data-admission-section="floors">
+                  <h4 className="mb-3 text-sm font-semibold text-navy">Điểm sàn</h4>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    {floorSources.map((source) => <SourceRecord key={source.row} source={source} />)}
+                    {facts.floors.map((fact) => <WorkbookFact key={fact.id} fact={fact} />)}
+                  </div>
+                </section>
+              ) : null}
+              {otherSources.length ? (
+                <section className="mb-5" aria-label="Bản ghi nguồn khác">
+                  <h4 className="mb-3 text-sm font-semibold text-navy">Bản ghi nguồn khác</h4>
+                  <div className="grid gap-3 lg:grid-cols-2">{otherSources.map((source) => <SourceRecord key={source.row} source={source} />)}</div>
+                </section>
+              ) : null}
+              {facts.residual.length ? (
+                <details className="mb-4">
+                  <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-azure">Giá trị khác trong bảng</summary>
+                  <div className="grid gap-3 lg:grid-cols-2">{facts.residual.map((fact) => <WorkbookFact key={fact.id} fact={fact} />)}</div>
+                </details>
+              ) : null}
+              {!sources.length && !facts.cutoffs.length && !facts.floors.length && !facts.residual.length ? <p className="text-sm text-muted">Chưa có điểm tham khảo cho ngành này.</p> : null}
               <Pagination page={sourcePage} count={sources.length} label="nguồn" onChange={setSourcePage} />
             </div>
           </details>
@@ -138,11 +194,23 @@ const ProgramDetails = memo(function ProgramDetails({ program, sourceMap }: {
   );
 });
 
-function SourcesView({ document }: { document: UniversityAdmissionsDocument }) {
-  const [query, setQuery] = useState("");
+function normalizedProgramCode(value: string) {
+  return value.normalize("NFC").replace(/\s+/gu, " ").trim().toLowerCase();
+}
+
+function SourcesView({ document, initialProgramCode = "" }: {
+  document: UniversityAdmissionsDocument;
+  initialProgramCode?: string;
+}) {
+  const [query, setQuery] = useState(initialProgramCode);
   const deferredQuery = useDeferredValue(query);
   const [page, setPage] = useState(1);
+  useEffect(() => {
+    setQuery(initialProgramCode);
+    setPage(1);
+  }, [initialProgramCode]);
   const sourceMap = useMemo(() => new Map(document.sources.map((source) => [source.row, source])), [document.sources]);
+  const admissionIndex = useMemo(() => getSchoolAdmissionIndex(document), [document]);
   const searchIndex = useMemo(() => document.programs.map((program) => {
     const sources = program.sourceRows.map((row) => sourceMap.get(row));
     return [program, [program.code, program.name, program.combinations, program.origin, program.originalCode,
@@ -151,8 +219,11 @@ function SourcesView({ document }: { document: UniversityAdmissionsDocument }) {
   }), [document.programs, sourceMap]);
   const programs = useMemo(() => {
     const normalized = deferredQuery.trim().toLocaleLowerCase("vi");
+    if (normalizedProgramCode(initialProgramCode) && normalizedProgramCode(deferredQuery) === normalizedProgramCode(initialProgramCode)) {
+      return document.programs.filter((program) => normalizedProgramCode(program.code) === normalizedProgramCode(initialProgramCode));
+    }
     return normalized ? searchIndex.filter(([, text]) => text.includes(normalized)).map(([program]) => program) : document.programs;
-  }, [deferredQuery, document.programs, searchIndex]);
+  }, [deferredQuery, document.programs, initialProgramCode, searchIndex]);
   const safePage = Math.min(page, Math.max(1, Math.ceil(programs.length / PAGE_SIZE)));
   const visible = programs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
@@ -163,7 +234,7 @@ function SourcesView({ document }: { document: UniversityAdmissionsDocument }) {
       </label>
       <p className="mb-4 text-sm text-muted" role="status">{programs.length} ngành / chương trình</p>
       <div className="space-y-3" aria-busy={query !== deferredQuery}>
-        {visible.map((program) => <ProgramDetails key={program.id} program={program} sourceMap={sourceMap} />)}
+        {visible.map((program) => <ProgramDetails key={program.id} program={program} sourceMap={sourceMap} document={document} canonical={admissionIndex.byRowId.get(program.id)} />)}
       </div>
       {!programs.length ? <p className="rounded-2xl bg-ice p-4 text-sm text-muted">Không có ngành khớp từ khóa. Thử mã xét tuyển hoặc xóa từ khóa.</p> : null}
       <Pagination page={safePage} count={programs.length} label="ngành" onChange={setPage} />
@@ -215,8 +286,12 @@ function RawRows({ headers, rows, label, searchable = false }: {
   );
 }
 
-function AdmissionsContent({ document }: { document: UniversityAdmissionsDocument }) {
+function AdmissionsContent({ document, initialProgramCode }: {
+  document: UniversityAdmissionsDocument;
+  initialProgramCode?: string;
+}) {
   const [view, setView] = useState<"source" | "assumptions">("source");
+  useEffect(() => { setView("source"); }, [initialProgramCode]);
   const viewId = useId();
   const inputs = useMemo(() => {
     const columns = document.assumptions.headers.flatMap((header, index) => {
@@ -239,7 +314,7 @@ function AdmissionsContent({ document }: { document: UniversityAdmissionsDocumen
         ))}
       </div>
       <div id={viewId}>
-        {view === "source" ? <SourcesView document={document} /> : null}
+        {view === "source" ? <SourcesView document={document} initialProgramCode={initialProgramCode} /> : null}
         {view === "assumptions" ? (
           <section aria-label="Đầu và đối chiếu" data-admissions-view="assumptions">
             <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
@@ -254,7 +329,10 @@ function AdmissionsContent({ document }: { document: UniversityAdmissionsDocumen
 }
 
 /** Reused by school pages; mounting it is the explicit request for one school's JSON. */
-export function UniversityAdmissionsPanel({ schoolId }: { schoolId: string }) {
+export function UniversityAdmissionsPanel({ schoolId, initialProgramCode }: {
+  schoolId: string;
+  initialProgramCode?: string;
+}) {
   const [document, setDocument] = useState<UniversityAdmissionsDocument | null>(null);
   const [error, setError] = useState<{ schoolId: string; message: string } | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -276,7 +354,7 @@ export function UniversityAdmissionsPanel({ schoolId }: { schoolId: string }) {
     return () => { active = false; };
   }, [attempt, schoolId]);
 
-  return document?.schoolId === schoolId ? <AdmissionsContent key={schoolId} document={document} /> : error?.schoolId === schoolId ? (
+  return document?.schoolId === schoolId ? <AdmissionsContent key={schoolId} document={document} initialProgramCode={initialProgramCode} /> : error?.schoolId === schoolId ? (
     <div role="alert" className="rounded-2xl bg-ice p-5 text-sm text-navy">
       <p>{error.message}</p>
       <Button type="button" variant="secondary" size="sm" className="mt-3" onClick={() => setAttempt((value) => value + 1)}>Thử tải lại</Button>

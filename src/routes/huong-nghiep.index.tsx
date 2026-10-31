@@ -5,9 +5,9 @@ import { SiteShell } from "@/components/layout/SiteShell";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { UniversityExplorer } from "@/components/university/UniversityExplorer";
-import { CAREERS, careerMatch } from "@/data/careers";
+import { CAREERS } from "@/data/careers";
 import { RIASEC_TYPES } from "@/data/riasec";
-import { UNIVERSITY_DISCLAIMER } from "@/lib/riasec";
+import { CAREER_MATCH_NOTE, CURRENT_CAREER_PROFILE_NOTE, hasCareerProfile, rankCareerMatches } from "@/lib/career-profile";
 import { useMergedProfile } from "@/lib/use-quiz-status";
 
 export const Route = createFileRoute("/huong-nghiep/")({ component: CareerPage });
@@ -15,10 +15,7 @@ export const Route = createFileRoute("/huong-nghiep/")({ component: CareerPage }
 function CareerPage() {
   const profile = useMergedProfile();
   const riasec = profile?.riasec;
-  const list = CAREERS.map((c) => ({
-    ...c,
-    match: profile ? careerMatch(c, profile.mbti, riasec?.code, riasec?.scores) : null,
-  })).sort((a, b) => (b.match ?? 0) - (a.match ?? 0));
+  const list = rankCareerMatches(CAREERS, profile);
 
   return (
     <SiteShell>
@@ -47,13 +44,18 @@ function CareerPage() {
 
       <section id="nganh-nghe" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6">
         <h2 className="font-display text-2xl font-semibold text-navy">Gợi ý ngành nghề</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted">{UNIVERSITY_DISCLAIMER}</p>
+        <p className="mt-2 max-w-2xl text-sm text-muted">{CAREER_MATCH_NOTE}</p>
+        <p className="mt-2 max-w-2xl text-xs text-muted">
+          {hasCareerProfile(profile)
+            ? CURRENT_CAREER_PROFILE_NOTE
+            : "Làm bài MBTI hoặc RIASEC để xem mức phù hợp cá nhân. Big Five không được dùng để chấm mức phù hợp nghề."}
+        </p>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {list.map((c, i) => {
             const Icon = CAREER_ICONS[c.icon];
             return (
               <Reveal key={c.id} delay={i * 40}>
-                <article className="flex h-full flex-col rounded-[24px] bg-card p-6 shadow-border transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-border-hover">
+                <article data-career-id={c.id} data-career-match={c.match ?? undefined} className="flex h-full flex-col rounded-[24px] bg-card p-6 shadow-border transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-border-hover">
                   <div className="flex items-start justify-between gap-3">
                     <span className="grid size-11 place-items-center rounded-[14px] bg-ice text-navy">
                       <Icon className="size-5" />

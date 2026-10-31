@@ -1,0 +1,96 @@
+name: Verify Stage 1 foundation and existing features
+
+on:
+  push:
+    branches: [stage1-foundation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare isolated browser workspace
+        run: |
+          sudo mkdir -p /workspace
+          sudo chown "$USER":"$USER" /workspace
+          cp -a "$GITHUB_WORKSPACE"/. /workspace/
+          cd /workspace
+          rm -rf screenshots
+          mkdir -p screenshots
+          git fetch --no-tags --depth=1 origin 1820dd022efe6aa96930895f6722c69524d420d6
+          git show 1820dd022efe6aa96930895f6722c69524d420d6:src/data/universities.ts >screenshots/baseline-universities.ts
+      - name: Install dependencies and browser
+        working-directory: /workspace
+        run: |
+          npm ci 2>&1 | tee screenshots/install.log
+          npx playwright install --with-deps chromium 2>&1 | tee screenshots/browser-install.log
+      - name: Check Stage 1 data, identities and legacy preservation
+        working-directory: /workspace
+        env:
+          ADMISSIONS_CHECK_REPORT: /workspace/screenshots/admissions-data-check.json
+          ADMISSIONS_BASELINE_UNIVERSITIES: /workspace/screenshots/baseline-universities.ts
+        run: npm run check:stage1 2>&1 | tee screenshots/stage1-data-check.log
+      - name: Run existing and regression unit tests
+        working-directory: /workspace
+        run: npm test 2>&1 | tee screenshots/unit-tests.log
+      - name: Build production output and check generated route types
+        working-directory: /workspace
+        run: |
+          npm run build 2>&1 | tee screenshots/build.log
+          cp src/routeTree.gen.ts screenshots/routeTree.gen.ts
+          npm run typecheck 2>&1 | tee screenshots/typecheck.log
+      - name: Render development build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          sh startup.sh 2>&1 | tee screenshots/dev-start.log
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail --max-time 2 http://127.0.0.1:8080/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png 2>&1 | tee screenshots/dev-smoke.log
+      - name: Render production build on desktop and mobile
+        working-directory: /workspace
+        run: |
+          npm run preview:restart 2>&1 | tee screenshots/preview-start.log
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/production.png --baseline /workspace/screenshots/dev.json 2>&1 | tee screenshots/production-smoke.log
+          node --input-type=module -e 'import fs from "node:fs"; const v=JSON.parse(fs.readFileSync("screenshots/production.json", "utf8")); if(v.divergesFromBaseline) throw Error(v.baselineReasons.join("; "));'
+      - name: Exercise Stage 1 school, career and all five quiz flows
+        working-directory: /workspace
+        env:
+          SITE_STAGE1: '1'
+          SITE_EXPECT_FIXES: '1'
+          SITE_ADMISSIONS_2026: '1'
+          SITE_REVISION: stage1
+        run: node scripts/site-regression.mjs http://127.0.0.1:8081/ 2>&1 | tee screenshots/site-regression.log
+      - name: Preserve server logs
+        if: always()
+        working-directory: /workspace
+        run: |
+          mkdir -p screenshots
+          if [ -f .grok/preview.log ]; then cp .grok/preview.log screenshots/preview.log; fi
+          if [ -f /tmp/app-startup.log ]; then cp /tmp/app-startup.log screenshots/dev-server.log; fi
+      - name: Preserve browser screenshots and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage1-verification-${{ github.run_attempt }}
+          path: /workspace/screenshots/
+          if-no-files-found: warn

@@ -1,4 +1,5 @@
 import type { UniversityAdmissionsDocument } from "@/data/university-admissions-types";
+import { getSchoolAdmissionIndex } from "./admission-identities.ts";
 
 // Keep recent details ready without retaining all 126 schools in browser memory.
 const MAX_CACHED_SCHOOLS = 8;
@@ -8,7 +9,7 @@ const requests = new Map<string, Promise<UniversityAdmissionsDocument>>();
 function isDocument(value: unknown, schoolId: string): value is UniversityAdmissionsDocument {
   if (!value || typeof value !== "object") return false;
   const document = value as Partial<UniversityAdmissionsDocument>;
-  return document.version === 1 && document.schoolId === schoolId &&
+  return document.version === 1 && document.schoolId === schoolId && document.year === 2026 &&
     Array.isArray(document.programs) && Array.isArray(document.sources) &&
     Array.isArray(document.estimates?.headers) && Array.isArray(document.estimates?.rows) &&
     Array.isArray(document.assumptions?.headers) && Array.isArray(document.assumptions?.rows) &&
@@ -41,6 +42,12 @@ export function loadUniversityAdmissions(schoolId: string): Promise<UniversityAd
       throw new Error("Dữ liệu tuyển sinh chưa sẵn sàng. Bạn có thể thử lại.");
     }
     if (!isDocument(document, schoolId)) throw new Error("Dữ liệu tuyển sinh chưa sẵn sàng. Bạn có thể thử lại.");
+    try {
+      // Validate references and warm the same canonical index used by the details UI.
+      getSchoolAdmissionIndex(document);
+    } catch {
+      throw new Error("Dữ liệu tuyển sinh chưa sẵn sàng. Bạn có thể thử lại.");
+    }
     documents.set(schoolId, document);
     if (documents.size > MAX_CACHED_SCHOOLS) {
       const oldest = documents.keys().next().value;

@@ -6,12 +6,13 @@ import { CAREER_ICONS } from "@/components/career/career-icons";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { bigfiveBand, bigfiveCopy, BIGFIVE_TRAITS } from "@/data/bigfive";
-import { CAREERS, careerMatch } from "@/data/careers";
+import { CAREERS } from "@/data/careers";
 import { getPersonality } from "@/data/personalities";
 import { getRiasec } from "@/data/riasec";
 import { getRiasecCombination } from "@/lib/riasec-combination";
 import type { QuizResult } from "@/data/types";
 import { resultSubtitle, resultTitle } from "@/lib/quiz-engine";
+import { careerProfileFromResult, CAREER_MATCH_NOTE, CURRENT_CAREER_PROFILE_NOTE, hasCareerProfile, rankCareerMatches, RESULT_CAREER_PROFILE_NOTE } from "@/lib/career-profile";
 import { AxisBars } from "./AxisBars";
 import { RadialStats } from "./RadialStats";
 import { RiasecResult } from "./RiasecResult";
@@ -47,14 +48,13 @@ async function shareProfile(result: QuizResult) {
   copyProfile(result);
 }
 
-export function ResultView({ result }: { result: QuizResult }) {
+export function ResultView({ result, profileContext = "result" }: { result: QuizResult; profileContext?: "result" | "current" }) {
   const person = result.mbti ? getPersonality(result.mbti) : undefined;
   const topHolland = result.riasec ? getRiasec(result.riasec.code[0] ?? "") : undefined;
   const combo = result.riasec ? getRiasecCombination(result.riasec.code) : undefined;
-  const careers = CAREERS.map((c) => ({
-    ...c,
-    match: careerMatch(c, result.mbti, result.riasec?.code, result.riasec?.scores),
-  })).sort((a, b) => b.match - a.match);
+  const profile = careerProfileFromResult(result);
+  const careers = rankCareerMatches(CAREERS, profile);
+  const contextNote = profileContext === "current" ? CURRENT_CAREER_PROFILE_NOTE : RESULT_CAREER_PROFILE_NOTE;
   const heroImg = person?.image ?? topHolland?.image ?? (result.bigfive ? "/illustrations/quiz-bigfive.webp" : undefined);
   const heroAlt = person ? `${person.id} ${person.name}` : (topHolland?.name ?? "Hồ sơ");
   const heroSummary =
@@ -64,7 +64,7 @@ export function ResultView({ result }: { result: QuizResult }) {
     "Đây là chân dung tham khảo dựa trên câu trả lời của bạn. Dùng để soi, không phải để đóng khung.";
 
   return (
-    <div>
+    <div data-career-profile-context={profileContext}>
       <section className="hero-wash">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:py-16">
           <Reveal>
@@ -206,7 +206,7 @@ export function ResultView({ result }: { result: QuizResult }) {
         </>
       ) : null}
 
-      {result.riasec ? <RiasecResult riasec={result.riasec} /> : null}
+      {result.riasec ? <RiasecResult riasec={result.riasec} careerProfile={profile} profileContext={profileContext} /> : null}
 
       {result.bigfive ? (
         <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -246,9 +246,12 @@ export function ResultView({ result }: { result: QuizResult }) {
       <section className="bg-mist py-12">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
-            <h2 className="font-display text-2xl font-semibold text-navy">Nhóm nghề có thể phù hợp</h2>
+            <h2 className="font-display text-2xl font-semibold text-navy">{hasCareerProfile(profile) ? "Nhóm nghề có thể phù hợp" : "Khám phá nhóm nghề"}</h2>
             <p className="mt-2 text-sm text-muted">
-              Mức phù hợp là ước lượng tham khảo, không phải kết luận nghề nghiệp.
+              {CAREER_MATCH_NOTE}
+            </p>
+            <p className="mt-2 text-xs text-muted">
+              {hasCareerProfile(profile) ? contextNote : "Chưa có kết quả MBTI hoặc RIASEC để tính mức phù hợp nghề. Các nhóm dưới đây chỉ để khám phá."}
             </p>
           </Reveal>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -256,18 +259,20 @@ export function ResultView({ result }: { result: QuizResult }) {
               const Icon = CAREER_ICONS[c.icon];
               return (
                 <Reveal key={c.id} delay={i * 50}>
-                  <article className="flex h-full flex-col rounded-[20px] bg-card p-5 shadow-border">
+                  <article data-career-id={c.id} data-career-match={c.match ?? undefined} className="flex h-full flex-col rounded-[20px] bg-card p-5 shadow-border">
                     <div className="flex items-start justify-between gap-3">
                       <span className="grid size-10 place-items-center rounded-[12px] bg-ice text-navy">
                         <Icon className="size-4" />
                       </span>
-                      <span className="font-display text-sm font-semibold tabular-nums text-azure">{c.match}%</span>
+                      {c.match != null ? <span className="font-display text-sm font-semibold tabular-nums text-azure">{c.match}%</span> : null}
                     </div>
                     <h3 className="mt-3 font-display font-semibold text-navy">{c.name}</h3>
                     <p className="mt-2 text-sm text-muted">{c.description}</p>
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ice">
-                      <div className="bar-fill h-full bg-cyan" style={{ width: `${c.match}%` }} />
-                    </div>
+                    {c.match != null ? (
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ice">
+                        <div className="bar-fill h-full bg-cyan" style={{ width: `${c.match}%` }} />
+                      </div>
+                    ) : null}
                     <Button asChild variant="ghost" className="mt-auto justify-start px-0">
                       <Link to="/huong-nghiep/$careerId" params={{ careerId: c.id }}>
                         Xem thêm

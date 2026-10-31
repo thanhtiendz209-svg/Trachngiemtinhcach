@@ -1,5 +1,4 @@
 import type { CareerField } from "./types";
-import { riasecFitPercent } from "@/lib/riasec";
 
 export const CAREERS: CareerField[] = [
   {
@@ -143,24 +142,3 @@ export function getCareer(id: string) {
   return CAREER_MAP[id];
 }
 
-export function careerMatch(
-  career: CareerField,
-  mbti?: string,
-  riasecCode?: string,
-  riasecScores?: Record<string, number>,
-) {
-  if (riasecScores) {
-    const fit = riasecFitPercent(riasecScores, career.riasec);
-    let bonus = 0;
-    if (mbti && career.types.includes(mbti)) bonus += 4;
-    return Math.min(96, Math.max(8, fit + bonus));
-  }
-  let score = 42;
-  if (mbti && career.types.includes(mbti)) score += 28;
-  if (riasecCode) {
-    const letters = riasecCode.split("");
-    const overlap = career.riasec.filter((x) => letters.includes(x)).length;
-    score += overlap * 10;
-  }
-  return Math.min(94, Math.max(38, score));
-}

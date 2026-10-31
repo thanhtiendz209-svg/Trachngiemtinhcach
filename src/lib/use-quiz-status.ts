@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { QUIZZES } from "@/data/quizzes";
 import type { QuizResult } from "@/data/types";
-import { hasPartialProgress, loadLastResult, loadMergedProfile, loadProgress, loadResult } from "./storage";
+import { hasPartialProgress, loadLastResult, loadMergedProfile, loadProgress, loadResult, QUIZ_RESULTS_CHANGED } from "./storage";
 
 export function useLastResult() {
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -14,7 +14,14 @@ export function useLastResult() {
 export function useMergedProfile() {
   const [profile, setProfile] = useState<ReturnType<typeof loadMergedProfile> | null>(null);
   useEffect(() => {
-    setProfile(loadMergedProfile());
+    const refresh = () => setProfile(loadMergedProfile());
+    refresh();
+    window.addEventListener("storage", refresh);
+    window.addEventListener(QUIZ_RESULTS_CHANGED, refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener(QUIZ_RESULTS_CHANGED, refresh);
+    };
   }, []);
   return profile;
 }

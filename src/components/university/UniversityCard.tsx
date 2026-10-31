@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ADMISSION_FLOOR_SUMMARIES } from "@/data/admission-floor-summaries";
 import type { University } from "@/data/types";
 import { FIT_NOTE, MISSING_DATA } from "@/lib/riasec";
 import { admissionHrefs } from "@/lib/university";
@@ -61,10 +62,7 @@ export const UniversityCard = memo(function UniversityCard({
     const values = admissions?.thptValues ?? [];
     return values.length ? scoreRange(Math.min(...values), Math.max(...values)) : null;
   }, [admissions]);
-  const floors = useMemo(
-    () => admissions?.ranges.filter((range) => /sàn|ngưỡng/i.test(range.kind)) ?? [],
-    [admissions],
-  );
+  const floors = ADMISSION_FLOOR_SUMMARIES[uni.id] ?? [];
 
   return (
     <article className="flex h-full flex-col rounded-[24px] bg-card p-5 shadow-border [content-visibility:auto] [contain-intrinsic-size:auto_280px]">
@@ -117,12 +115,12 @@ export const UniversityCard = memo(function UniversityCard({
             </p>
             {floors.length ? (
               <p className="text-xs leading-relaxed text-muted">
-                <span className="font-medium text-navy">Điểm sàn / ngưỡng đăng ký, tách riêng: </span>
-                {floors.map((range) => `${range.method}: ${scoreRange(range.min, range.max)} (thang ${range.scale})`).join(" · ")}
+                <span className="font-medium text-navy">Điểm sàn trong bảng, tách riêng: </span>
+                {floors.map((range) => `${range.method}: ${scoreRange(range.min, range.max)} (thang ${range.scale}, ${range.year})`).join(" · ")}
               </p>
             ) : null}
             <p className="text-xs leading-relaxed text-muted">
-              {admissions.programCount} dòng chương trình · {admissions.sourceRecordCount} bản ghi nguồn · {admissions.estimateCount} kịch bản ước tính riêng.
+              {admissions.programCount} dòng chương trình · {admissions.sourceRecordCount} bản ghi nguồn.
               {" "}Xem phương thức, thang điểm, điều kiện và nguồn tại trang của trường.
             </p>
           </>

@@ -1,9 +1,11 @@
 import { QUIZZES } from "@/data/quizzes";
 import type { QuizProgress, QuizResult } from "@/data/types";
+import { mergeQuizResults } from "./career-profile";
 
 const PROGRESS = (id: string) => `lumina-progress-${id}`;
 const RESULT = (id: string) => `lumina-result-${id}`;
 const LAST = "lumina-last-result";
+export const QUIZ_RESULTS_CHANGED = "lumina-results-changed";
 
 function read<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -53,6 +55,7 @@ export function saveResult(result: QuizResult) {
   write(RESULT(result.quizId), result);
   write(LAST, result);
   clearProgress(result.quizId);
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(QUIZ_RESULTS_CHANGED));
 }
 
 export function loadLastResult() {
@@ -70,15 +73,6 @@ export function loadAllResults() {
 }
 
 export function loadMergedProfile() {
-  const all = loadAllResults();
-  const combined = all.find((r) => r.kind === "combined");
-  const mbti = all.find((r) => r.mbti)?.mbti ?? combined?.mbti;
-  const axes = all.find((r) => r.axes)?.axes ?? combined?.axes;
-  const riasec =
-    all.find((r) => r.kind === "riasec")?.riasec ??
-    all.find((r) => r.kind === "interest")?.riasec ??
-    combined?.riasec;
-  const bigfive = all.find((r) => r.kind === "bigfive")?.bigfive;
-  return { all, mbti, axes, riasec, bigfive };
+  return mergeQuizResults(loadAllResults());
 }
 

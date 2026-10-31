@@ -8,12 +8,18 @@ import { UniversityAdmissionsPanel } from "@/components/university/UniversityAdm
 import { UNIVERSITIES } from "@/data/universities";
 
 export const Route = createFileRoute("/truong-dai-hoc/$universityId")({
+  validateSearch: (search: Record<string, unknown>): { nganh?: string } => ({
+    nganh: typeof search.nganh === "string" && search.nganh.trim().length <= 120
+      ? search.nganh.normalize("NFC").trim() || undefined
+      : undefined,
+  }),
   head: () => ({ meta: [{ title: "Ngành và điểm tuyển sinh 2026 | Lumina" }] }),
   component: UniversityPage,
 });
 
 function UniversityPage() {
   const { universityId } = Route.useParams();
+  const { nganh } = Route.useSearch();
   const university = UNIVERSITIES.find((item) => item.id === universityId);
   useEffect(() => {
     if (university) document.title = `${university.name} – Ngành & điểm tuyển sinh 2026 | Lumina`;
@@ -36,12 +42,12 @@ function UniversityPage() {
       <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12" aria-label="Chi tiết ngành và điểm tuyển sinh">
         <details className="mb-6 rounded-2xl bg-card p-4 shadow-border sm:p-5">
           <summary className="min-h-11 cursor-pointer font-display text-lg font-semibold text-navy">Danh mục ngành & chương trình ({university.majorItems.length})</summary>
-          <p className="mb-4 mt-2 text-sm text-muted">Bao gồm các chương trình bổ sung và tên ngành đã lưu trước đây. Những mục chưa đối chiếu được với dữ liệu 2026 được giữ để tra cứu; xem ghi chú trong phần “Giả định & đối chiếu”.</p>
+          <p className="mb-4 mt-2 text-sm text-muted">Chọn mã ngành để xem điểm. Các tên ngành cũ được giữ để đối chiếu.</p>
           <ul className="grid gap-3 text-sm sm:grid-cols-2">
-            {university.majorItems.map((major) => <li key={`${major.code}-${major.name}`} className="min-w-0 rounded-xl bg-mist p-3"><span className="font-semibold text-azure">{major.code || "Chưa có mã"}</span><span className="mt-1 block break-words text-navy">{major.name}</span></li>)}
+            {university.majorItems.map((major) => <li key={`${major.code}-${major.name}`} className="min-w-0 rounded-xl bg-mist p-3">{major.code ? <Link to="/truong-dai-hoc/$universityId" params={{ universityId }} search={{ nganh: major.code }} className="inline-flex min-h-11 items-center font-semibold text-azure underline underline-offset-4">{major.code}</Link> : <span className="font-semibold text-muted">Chưa có mã</span>}<span className="mt-1 block break-words text-navy">{major.name}</span></li>)}
           </ul>
         </details>
-        <UniversityAdmissionsPanel key={university.id} schoolId={university.id} />
+        <UniversityAdmissionsPanel key={university.id} schoolId={university.id} initialProgramCode={nganh} />
       </section>
     </SiteShell>
   );

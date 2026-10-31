@@ -3,20 +3,20 @@ import { CAREER_ICONS } from "@/components/career/career-icons";
 import { TypeCard } from "@/components/personality/TypeCard";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
-import { careerMatch } from "@/data/careers";
 import { getPersonality } from "@/data/personalities";
 import { getRiasec } from "@/data/riasec";
 import type { CareerField } from "@/data/types";
-import { useLastResult } from "@/lib/use-quiz-status";
+import { careerMatch, CAREER_MATCH_NOTE, CURRENT_CAREER_PROFILE_NOTE } from "@/lib/career-profile";
+import { useMergedProfile } from "@/lib/use-quiz-status";
 
 export function CareerDetail({ career }: { career: CareerField }) {
-  const last = useLastResult();
-  const match = last ? careerMatch(career, last.mbti, last.riasec?.code) : null;
+  const profile = useMergedProfile();
+  const match = careerMatch(career, profile);
   const Icon = CAREER_ICONS[career.icon];
   const types = career.types.map((id) => getPersonality(id)).filter(Boolean);
 
   return (
-    <article>
+    <article data-career-id={career.id} data-career-match={match ?? undefined}>
       <section className="hero-wash">
         <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr]">
           <Reveal>
@@ -35,12 +35,12 @@ export function CareerDetail({ career }: { career: CareerField }) {
             </Reveal>
             {match != null ? (
               <Reveal delay={160} className="mt-5">
-                <p className="text-sm text-muted">Mức phù hợp ước lượng với hồ sơ gần nhất của bạn</p>
+                <p className="text-sm text-muted">Mức tương đồng về sở thích từ hồ sơ hiện tại</p>
                 <p className="font-display text-3xl font-semibold tabular-nums text-azure">{match}%</p>
                 <div className="mt-2 h-2 max-w-xs overflow-hidden rounded-full bg-ice">
                   <div className="bar-fill h-full bg-cyan" style={{ width: `${match}%` }} />
                 </div>
-                <p className="mt-2 text-xs text-muted">Tham khảo — không phải lời kết.</p>
+                <p className="mt-2 text-xs text-muted">{CURRENT_CAREER_PROFILE_NOTE} {CAREER_MATCH_NOTE}</p>
               </Reveal>
             ) : (
               <Reveal delay={160} className="mt-5">

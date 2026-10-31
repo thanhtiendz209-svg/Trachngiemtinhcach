@@ -1,38 +1,36 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { ResultView } from "@/components/result/ResultView";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { QUIZZES } from "@/data/quizzes";
 import type { QuizResult } from "@/data/types";
-import { loadAllResults, loadMergedProfile } from "@/lib/storage";
+import { useMergedProfile } from "@/lib/use-quiz-status";
 
 export const Route = createFileRoute("/ho-so")({ component: ProfilePage });
 
 function ProfilePage() {
-  const [ready, setReady] = useState(false);
-  const [all, setAll] = useState<QuizResult[]>([]);
-  const [merged, setMerged] = useState<QuizResult | null>(null);
-
-  useEffect(() => {
-    const list = loadAllResults();
-    setAll(list);
-    const m = loadMergedProfile();
-    if (m.mbti || m.riasec || m.bigfive) {
-      setMerged({
+  const profile = useMergedProfile();
+  const ready = profile !== null;
+  const all = profile?.all ?? [];
+  const merged = useMemo<QuizResult | null>(() => {
+    if (profile && (profile.mbti || profile.riasec || profile.bigfive)) {
+      const latest = profile.all.filter((result) => Number.isFinite(Date.parse(result.completedAt)))
+        .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))[0];
+      return {
         quizId: "combined",
         kind: "combined",
-        completedAt: list[0]?.completedAt ?? new Date().toISOString(),
-        mbti: m.mbti,
-        axes: m.axes,
-        riasec: m.riasec,
-        bigfive: m.bigfive,
+        completedAt: latest?.completedAt ?? new Date().toISOString(),
+        mbti: profile.mbti,
+        axes: profile.axes,
+        riasec: profile.riasec,
+        bigfive: profile.bigfive,
         answers: [],
-      });
+      };
     }
-    setReady(true);
-  }, []);
+    return null;
+  }, [profile]);
 
   return (
     <SiteShell>
@@ -73,7 +71,7 @@ function ProfilePage() {
             </div>
           </section>
           {merged ? (
-            <ResultView result={merged} />
+            <ResultView result={merged} profileContext="current" />
           ) : (
             <div className="mx-auto max-w-lg px-4 py-16 text-center">
               <h2 className="font-display text-2xl font-semibold text-navy">Chưa có hồ sơ</h2>

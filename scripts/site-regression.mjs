@@ -11,6 +11,7 @@ const origin = new URL(base).origin;
 const out = "/workspace/screenshots";
 const expectFixes = process.env.SITE_EXPECT_FIXES !== "0";
 const admissions2026 = process.env.SITE_ADMISSIONS_2026 === "1";
+const stage1 = process.env.SITE_STAGE1 === "1";
 const admissionsUniversities = admissions2026 ? JSON.parse(readFileSync(new URL("../src/data/universities.ts", import.meta.url), "utf8")
   .match(/export const UNIVERSITIES\s*=\s*(\[[\s\S]*\])\s+as University\[\]/)[1]) : [];
 const report = {
@@ -20,6 +21,7 @@ const report = {
   quizResults: {},
   universityResults: {},
   admissionsResults: {},
+  stage1Results: {},
   pageErrors: [],
 };
 mkdirSync(out, { recursive: true });
@@ -202,6 +204,57 @@ async function paginate(scope, rowSelector, keyAttribute, nextLabel) {
     await rows.first().waitFor({ state: "attached" });
   }
   throw new Error("Pagination exceeded its expected bound");
+}
+
+async function stage1Floor(page, schoolId, code, rowId, sourceRow, value, scope, shot) {
+  await navigate(page, `${origin}/truong-dai-hoc/${schoolId}?nganh=${encodeURIComponent(code)}`);
+  const input = page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true });
+  await visible(input);
+  assert.equal(await input.inputValue(), code);
+  const program = page.locator(`[data-program-id="${rowId}"]`);
+  await program.locator(":scope > summary").click();
+  const reference = await referencePoints(program);
+  const floor = reference.locator(`[data-floor-source-row="${sourceRow}"]`);
+  await visible(floor);
+  const values = await fields(floor);
+  assert.equal(Number(values["Giá trị trong nguồn"]), value);
+  assert.equal(values["Thang điểm"], "30");
+  assert.equal(values["Loại dữ liệu"], "Điểm sàn");
+  assert.equal(values["Năm"], "2026");
+  assert.equal(await floor.getAttribute("data-floor-scope"), scope);
+  assert.ok(values["Điều kiện"]?.length > 0, "Keep the floor's actual application conditions");
+  assert.match(await floor.getByRole("link", { name: "Xem nguồn", exact: true }).getAttribute("href"), /^https:\/\//);
+  assert.equal(await reference.locator('[data-admission-section="cutoffs"] [data-floor-source-row]').count(), 0);
+  assert.ok(await program.getAttribute("data-program-key"), "Render the validated canonical program identity");
+  assert.ok(await program.getAttribute("data-offering-id"), "Render the year-scoped offering identity");
+  if (scope === "school") await visible(floor.getByText(/Áp dụng chung toàn trường/));
+  await floor.evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + scrollY - 96, behavior: "instant" }));
+  await page.waitForTimeout(200);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+  await page.screenshot({ path: `${out}/${shot}.png` });
+  return program;
+}
+
+async function seedCareerContext(context, onlyBigFive = false) {
+  const common = { answers: [], completedAt: "2026-10-30T12:00:00Z" };
+  const results = {
+    mbti: { ...common, quizId: "mbti", kind: "mbti", completedAt: "2026-10-30T10:00:00Z", mbti: "INTJ", axes: { energy: 20, sensing: 30, thinking: 80, judging: 75 } },
+    riasec: { ...common, quizId: "riasec", kind: "riasec", completedAt: "2026-10-30T11:00:00Z", riasec: { code: "AIR", scores: { R: 10, I: 20, A: 30, S: 5, E: 10, C: 15 }, maxScores: { R: 50, I: 50, A: 45, S: 50, E: 50, C: 55 } } },
+    bigfive: { ...common, quizId: "bigfive", kind: "bigfive", bigfive: { O: 70, C: 60, E: 40, A: 50, N: 30 } },
+  };
+  await context.addInitScript(({ siteOrigin, seeded, only }) => {
+    if (location.origin !== siteOrigin || sessionStorage.getItem("stage1-seeded")) return;
+    localStorage.clear();
+    for (const [id, result] of Object.entries(seeded)) {
+      if (!only || id === "bigfive") localStorage.setItem(`lumina-result-${id}`, JSON.stringify(result));
+    }
+    localStorage.setItem("lumina-last-result", JSON.stringify(seeded.bigfive));
+    sessionStorage.setItem("stage1-seeded", "1");
+  }, { siteOrigin: origin, seeded: results, only: onlyBigFive });
+}
+
+async function careerScores(scope) {
+  return scope.locator("[data-career-id][data-career-match]").evaluateAll((nodes) => Object.fromEntries(nodes.map((node) => [node.getAttribute("data-career-id"), Number(node.getAttribute("data-career-match"))])));
 }
 
 let page;
@@ -417,8 +470,13 @@ try {
       await program.locator(":scope > summary").click();
       const reference = await referencePoints(program);
       assert.equal(await reference.locator("[data-source-row]").count(), 0);
-      const values = await fields(reference);
-      assert.equal(Number(values["Sàn THPT\n/30"]), 16.5, "Keep an original floor labelled as a floor when no linked source record exists");
+      const floor = reference.locator('[data-floor-source-row="21923"]');
+      await visible(floor);
+      const values = await fields(floor);
+      assert.equal(Number(values["Giá trị trong nguồn"]), 16.5, "Keep the original floor with its exact source even without cutoff references");
+      assert.equal(values["Loại dữ liệu"], "Điểm sàn");
+      assert.equal(values["Thang điểm"], "30");
+      assert.match(await floor.getByRole("link", { name: "Xem nguồn", exact: true }).getAttribute("href"), /hcmufa\.edu\.vn/);
       report.admissionsResults.sourceLessFloor = { program: "uni-086-row-16", point: 16.5 };
     });
 
@@ -443,6 +501,102 @@ try {
       await navigate(page, `${origin}/truong-dai-hoc/uni-999`);
       await visible(page.getByRole("heading", { name: "Trang này không có trên bản đồ", exact: true }));
       assert.equal(admissionsRequests.length, requestsBefore);
+    });
+  }
+
+  if (stage1) {
+    await check("Stage 1 canonical program links select exact codes and survive refresh", async () => {
+      await navigate(page, `${origin}/truong-dai-hoc/uni-001?nganh=CH1`);
+      await visible(page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }));
+      const rows = page.locator("[data-program-id]");
+      assert.ok(await rows.count() > 0);
+      assert.ok((await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-program-code")))).every((code) => code === "CH1"));
+      const identity = await rows.first().getAttribute("data-program-key");
+      const offering = await rows.first().getAttribute("data-offering-id");
+      assert.ok(identity && offering && identity !== offering);
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await ready(page);
+      await visible(rows);
+      assert.equal(await rows.first().getAttribute("data-program-key"), identity);
+      const catalogue = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Danh mục ngành & chương trình/ }) }).first();
+      await catalogue.locator(":scope > summary").click();
+      await catalogue.getByRole("link", { name: "CH2", exact: true }).first().click();
+      await page.waitForURL("**nganh=CH2");
+      await page.waitForFunction(() => [...document.querySelectorAll('[data-program-code]')].every((node) => node.getAttribute('data-program-code') === 'CH2'));
+      await visible(rows);
+      assert.equal(await page.getByRole("textbox", { name: "Tìm ngành hoặc mã ngành", exact: true }).inputValue(), "CH2");
+      await page.screenshot({ path: `${out}/stage1-program-link-desktop.png` });
+      await navigate(page, `${origin}/truong-dai-hoc/uni-001?nganh=NO-SUCH-PROGRAM`);
+      await visible(page.getByText("Không có ngành khớp từ khóa. Thử mã xét tuyển hoặc xóa từ khóa.", { exact: true }));
+      assert.equal(await page.locator("[data-program-id]").count(), 0);
+      report.stage1Results.programLinks = { exactCode: true, refreshStable: true, unknownCode: "no guessed match" };
+    });
+
+    await check("Stage 1 restores NEU floor22 separately from linked cutoffs with actual school-wide provenance", async () => {
+      const program = await stage1Floor(page, "uni-002", "7220201", "uni-002-row-11", 21458, 22, "school", "stage1-neu-floor-desktop");
+      assert.ok(await program.locator('[data-admission-section="cutoffs"] [data-source-row]').count() > 0);
+      report.stage1Results.neuFloor = { value: 22, scale: "30", scope: "school", sourceRow: 21458 };
+      await stage1Floor(page, "uni-086", "7140222", "uni-086-row-16", 21923, 16.5, "program", "stage1-mts-floor-desktop");
+    });
+
+    await check("Stage 1 current career scores agree across list, detail and profile despite newer Big Five", async () => {
+      const isolated = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+      await seedCareerContext(isolated);
+      const careerPage = await isolated.newPage();
+      observeErrors(careerPage);
+      try {
+        await navigate(careerPage, `${origin}/huong-nghiep`);
+        await visible(careerPage.locator("[data-career-id][data-career-match]"));
+        const listScores = await careerScores(careerPage);
+        assert.equal(Object.keys(listScores).length, 10);
+        const firstId = Object.keys(listScores)[0];
+        await navigate(careerPage, `${origin}/huong-nghiep/${firstId}`);
+        await visible(careerPage.locator("[data-career-id][data-career-match]"));
+        assert.equal((await careerScores(careerPage))[firstId], listScores[firstId]);
+        await careerPage.screenshot({ path: `${out}/stage1-career-detail-desktop.png` });
+        await navigate(careerPage, `${origin}/ho-so`);
+        const current = careerPage.locator('[data-career-profile-context="current"]');
+        await visible(current.locator("[data-career-id][data-career-match]"));
+        const currentScores = await careerScores(current);
+        assert.equal(Object.keys(currentScores).length, 6);
+        for (const [id, value] of Object.entries(currentScores)) assert.equal(value, listScores[id], id);
+        const before = JSON.stringify(currentScores);
+        await careerPage.evaluate(() => {
+          const data = JSON.parse(localStorage.getItem("lumina-result-riasec"));
+          data.completedAt = "2026-10-31T14:00:00Z";
+          data.riasec = { code: "SEC", scores: { R: 1, I: 1, A: 1, S: 50, E: 45, C: 50 }, maxScores: { R: 50, I: 50, A: 45, S: 50, E: 50, C: 55 } };
+          localStorage.setItem("lumina-result-riasec", JSON.stringify(data));
+          window.dispatchEvent(new StorageEvent("storage", { key: "lumina-result-riasec" }));
+        });
+        await careerPage.waitForFunction((previous) => JSON.stringify(Object.fromEntries([...document.querySelectorAll('[data-career-profile-context="current"] [data-career-id][data-career-match]')].map((node) => [node.getAttribute("data-career-id"), Number(node.getAttribute("data-career-match"))]))) !== previous, before);
+        const changed = await careerScores(current);
+        await navigate(careerPage, `${origin}/huong-nghiep`);
+        await visible(careerPage.locator("[data-career-id][data-career-match]"));
+        const updatedList = await careerScores(careerPage);
+        for (const [id, value] of Object.entries(changed)) assert.equal(value, updatedList[id], id);
+        await navigate(careerPage, `${origin}/ket-qua/riasec`);
+        await visible(careerPage.locator('[data-career-profile-context="result"]'));
+        await visible(careerPage.getByText("Gợi ý dựa trên kết quả bài test này; trang chi tiết nghề dùng hồ sơ hiện tại đã lưu.", { exact: true }));
+        report.stage1Results.careerConsistency = { careerCount: 10, profileRecommendations: 6, newestBigFiveDoesNotOverwrite: true, storageUpdates: true };
+      } finally { await isolated.close(); }
+    });
+
+    await check("Stage 1 Big Five-only profiles keep career exploration without fabricated scores", async () => {
+      const isolated = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      await seedCareerContext(isolated, true);
+      const generic = await isolated.newPage();
+      observeErrors(generic);
+      try {
+        for (const path of ["/huong-nghiep", "/huong-nghiep/it", "/ho-so", "/ket-qua/bigfive"]) {
+          await navigate(generic, `${origin}${path}`);
+          await visible(generic.locator("h1"));
+          if (path === "/ho-so") await visible(generic.locator('[data-career-profile-context="current"]'));
+          assert.equal(await generic.locator("[data-career-id][data-career-match]").count(), 0, path);
+        }
+        await visible(generic.getByRole("heading", { name: "Khám phá nhóm nghề", exact: true }));
+        await generic.getByRole("heading", { name: "Khám phá nhóm nghề", exact: true }).scrollIntoViewIfNeeded();
+        await generic.screenshot({ path: `${out}/stage1-bigfive-generic-mobile.png` });
+      } finally { await isolated.close(); }
     });
   }
 
@@ -581,6 +735,12 @@ try {
       await reference.locator(":scope > summary").scrollIntoViewIfNeeded();
       assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Source fields fit a mobile screen");
       await mobilePage.screenshot({ path: `${out}/school-hust-source-mobile.png` });
+      if (stage1) {
+        await stage1Floor(mobilePage, "uni-002", "7220201", "uni-002-row-11", 21458, 22, "school", "stage1-neu-floor-mobile");
+        await stage1Floor(mobilePage, "uni-086", "7140222", "uni-086-row-16", 21923, 16.5, "program", "stage1-mts-floor-mobile");
+        await navigate(mobilePage, `${origin}/truong-dai-hoc/uni-001`);
+        await admissionControls(mobilePage);
+      }
       await mobilePage.getByRole("button", { name: "Đầu và đối chiếu", exact: true }).click();
       const assumptions = await assumptionsView(mobilePage);
       const inputRows = assumptions.locator('[data-raw-kind="giả định"]');

@@ -3,27 +3,30 @@ import { CAREER_ICONS } from "@/components/career/career-icons";
 import { Reveal } from "@/components/shared/Reveal";
 import { UniversityExplorer } from "@/components/university/UniversityExplorer";
 import { Button } from "@/components/ui/button";
-import { CAREERS, careerMatch } from "@/data/careers";
+import { CAREERS } from "@/data/careers";
 import { getRiasec } from "@/data/riasec";
 import { RIASEC_GROUP_MAX } from "@/data/riasec-questions";
 import type { RiasecScores } from "@/data/types";
 import {
-  FIT_NOTE,
   RIASEC_DISCLAIMER,
   RIASEC_KEYS,
   UNIVERSITY_DISCLAIMER,
   rankRiasec,
 } from "@/lib/riasec";
 import { getRiasecCombination } from "@/lib/riasec-combination";
+import { careerProfileFromResult, CAREER_MATCH_NOTE, CURRENT_CAREER_PROFILE_NOTE, hasCareerProfile, rankCareerMatches, RESULT_CAREER_PROFILE_NOTE, type CareerProfile } from "@/lib/career-profile";
 
-export function RiasecResult({ riasec, showUniversity = true }: { riasec: RiasecScores; showUniversity?: boolean }) {
+export function RiasecResult({ riasec, showUniversity = true, careerProfile, profileContext = "result" }: {
+  riasec: RiasecScores;
+  showUniversity?: boolean;
+  careerProfile?: CareerProfile;
+  profileContext?: "result" | "current";
+}) {
   const combo = getRiasecCombination(riasec.code);
   const ranked = rankRiasec(riasec.scores);
   const top3 = ranked.slice(0, 3);
-  const careers = CAREERS.map((c) => ({
-    ...c,
-    match: careerMatch(c, undefined, riasec.code, riasec.scores),
-  })).sort((a, b) => b.match - a.match);
+  const profile = careerProfile ?? careerProfileFromResult({ riasec });
+  const careers = rankCareerMatches(CAREERS, profile);
 
   return (
     <>
@@ -160,27 +163,34 @@ export function RiasecResult({ riasec, showUniversity = true }: { riasec: Riasec
 
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <Reveal>
-          <h3 className="font-display text-xl font-semibold text-navy">Gợi ý ngành</h3>
-          <p className="mt-2 text-sm text-muted">{FIT_NOTE}</p>
+          <h3 className="font-display text-xl font-semibold text-navy">{hasCareerProfile(profile) ? "Gợi ý ngành" : "Khám phá nhóm nghề"}</h3>
+          <p className="mt-2 text-sm text-muted">{CAREER_MATCH_NOTE}</p>
+          <p className="mt-2 text-xs text-muted">{hasCareerProfile(profile)
+            ? profileContext === "current" ? CURRENT_CAREER_PROFILE_NOTE : RESULT_CAREER_PROFILE_NOTE
+            : "Chưa có kết quả MBTI hoặc RIASEC dùng được để tính mức phù hợp nghề. Các nhóm dưới đây chỉ để khám phá."}</p>
         </Reveal>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {careers.slice(0, 6).map((c, i) => {
             const Icon = CAREER_ICONS[c.icon];
             return (
               <Reveal key={c.id} delay={i * 50}>
-                <article className="flex h-full flex-col rounded-[20px] bg-card p-5 shadow-border">
+                <article data-career-id={c.id} data-career-match={c.match ?? undefined} className="flex h-full flex-col rounded-[20px] bg-card p-5 shadow-border">
                   <div className="flex items-start justify-between gap-3">
                     <span className="grid size-10 place-items-center rounded-[12px] bg-ice text-navy">
                       <Icon className="size-4" />
                     </span>
-                    <span className="font-display text-sm font-semibold tabular-nums text-azure">{c.match}%</span>
+                    {c.match != null ? <span className="font-display text-sm font-semibold tabular-nums text-azure">{c.match}%</span> : null}
                   </div>
                   <h4 className="mt-3 font-display font-semibold text-navy">{c.name}</h4>
                   <p className="mt-2 text-sm text-muted">{c.description}</p>
-                  <p className="mt-2 text-xs text-muted">Phù hợp về sở thích: {c.match}%</p>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ice">
-                    <div className="bar-fill h-full bg-cyan" style={{ width: `${c.match}%` }} />
-                  </div>
+                  {c.match != null ? (
+                    <>
+                      <p className="mt-2 text-xs text-muted">Phù hợp về sở thích: {c.match}%</p>
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ice">
+                        <div className="bar-fill h-full bg-cyan" style={{ width: `${c.match}%` }} />
+                      </div>
+                    </>
+                  ) : null}
                   <Button asChild variant="ghost" className="mt-auto justify-start px-0">
                     <Link to="/huong-nghiep/$careerId" params={{ careerId: c.id }}>
                       Xem thêm

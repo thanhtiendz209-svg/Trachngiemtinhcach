@@ -31,6 +31,8 @@ export interface AdmissionProgramRow {
   conditions: string;
   sourceStatus: string;
   sourceRows: number[];
+  /** Exact workbook floor sources; school scope is explicitly marked, never inferred as a program cutoff. */
+  floorSourceRefs?: Array<{ column: string; sourceRows: number[]; scope: "program" | "school" }>;
   /** Exact labelled cells, retaining different methods, scales and estimates. */
   columns: Array<{ label: string; value: AdmissionCell }>;
 }
@@ -70,6 +72,8 @@ export interface UniversityAdmissionsDocument {
   notice: string;
   programs: AdmissionProgramRow[];
   sources: AdmissionSourceRecord[];
+  /** Floor records from the supplied source worksheet, kept separate from admission cutoffs. */
+  floorSources?: AdmissionSourceRecord[];
   /** Header and values are preserved from the separate scenario worksheet. */
   estimates: { headers: string[]; rows: AdmissionCell[][] };
   assumptions: { notice: string; headers: string[]; rows: AdmissionCell[][] };
