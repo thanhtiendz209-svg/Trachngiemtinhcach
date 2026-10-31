@@ -1,0 +1,106 @@
+name: Verify live Vercel production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-live-production
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Prepare isolated browser workspace
+        run: |
+          sudo mkdir -p /workspace
+          sudo chown "$USER":"$USER" /workspace
+          cp -a "$GITHUB_WORKSPACE"/. /workspace/
+          cd /workspace
+          rm -rf screenshots
+          mkdir -p screenshots
+      - name: Install dependencies and browser
+        working-directory: /workspace
+        run: |
+          npm ci 2>&1 | tee screenshots/install.log
+          npx playwright install --with-deps chromium 2>&1 | tee screenshots/browser-install.log
+      - name: Wait for Stage 1 data on the public deployment
+        working-directory: /workspace
+        timeout-minutes: 6
+        run: |
+          node --input-type=module <<'JS' 2>&1 | tee screenshots/production-readiness.log
+          import { writeFileSync } from 'node:fs';
+          import { setTimeout as pause } from 'node:timers/promises';
+
+          const url = 'https://trachnghiemtinhcach.vercel.app/admissions/2026/uni-002.json';
+          const deadline = Date.now() + 5 * 60 * 1000;
+          const evidence = { ok: false, url, revision: process.env.GITHUB_SHA, attempts: [] };
+          try {
+            while (Date.now() < deadline) {
+              const attempt = { checkedAt: new Date().toISOString() };
+              try {
+                const response = await fetch(url, {
+                  signal: AbortSignal.timeout(10000),
+                  headers: { 'Cache-Control': 'no-cache' },
+                  cache: 'no-store',
+                });
+                attempt.status = response.status;
+                attempt.vercelId = response.headers.get('x-vercel-id');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const document = await response.json();
+                const source = Array.isArray(document.floorSources)
+                  ? document.floorSources.find((record) => record.row === 21458)
+                  : undefined;
+                if (document.schoolId !== 'uni-002' || !source || source.kind !== 'Điểm sàn') {
+                  throw new Error('The live school document does not yet contain Stage 1 floor row 21458');
+                }
+                evidence.ok = true;
+                attempt.sourceRow = source.row;
+                attempt.sourceKind = source.kind;
+                evidence.attempts.push(attempt);
+                console.log(`Production Stage 1 data is ready after ${evidence.attempts.length} attempt(s)`);
+                break;
+              } catch (error) {
+                attempt.error = String(error.message || error);
+                evidence.attempts.push(attempt);
+                console.log(`${attempt.checkedAt}: ${attempt.error}`);
+              }
+              const remaining = deadline - Date.now();
+              if (remaining > 0) await pause(Math.min(10000, remaining));
+            }
+            if (!evidence.ok) throw new Error('Stage 1 production data did not appear within five minutes');
+          } finally {
+            writeFileSync('screenshots/production-readiness.json', JSON.stringify(evidence, null, 2));
+          }
+          JS
+      - name: Exercise live school, career and all five quiz flows
+        working-directory: /workspace
+        env:
+          BROWSER_ALLOW_EXTERNAL_HOST: '1'
+          SITE_STAGE1: '1'
+          SITE_EXPECT_FIXES: '1'
+          SITE_ADMISSIONS_2026: '1'
+          SITE_REVISION: production-${{ github.sha }}
+        run: node scripts/site-regression.mjs https://trachnghiemtinhcach.vercel.app/ 2>&1 | tee screenshots/site-regression.log
+      - name: Preserve live browser screenshots and verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /workspace/screenshots/
+          if-no-files-found: warn
