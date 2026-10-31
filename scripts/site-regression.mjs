@@ -685,14 +685,34 @@ try {
           await majorPage.waitForFunction(() => document.querySelector("[data-major-filter-list]")?.clientHeight >= 44, null, { timeout: 5000 });
           const selectedPopupBounds = await popup.boundingBox();
           assert.ok(selectedPopupBounds.y >= 0 && selectedPopupBounds.y + selectedPopupBounds.height <= viewport.height + 1);
-          await majorPage.waitForFunction(() => {
-            const list = document.querySelector("[data-major-filter-list]");
-            const option = list?.querySelector('[aria-selected="true"]');
-            if (!list || !option) return false;
-            const bounds = list.getBoundingClientRect();
-            const selected = option.getBoundingClientRect();
-            return selected.top >= bounds.top - 1 && selected.top < bounds.bottom;
-          }, null, { timeout: 5000 });
+          try {
+            await majorPage.waitForFunction(() => {
+              const list = document.querySelector("[data-major-filter-list]");
+              const option = list?.querySelector('[aria-selected="true"]');
+              if (!list || !option) return false;
+              const bounds = list.getBoundingClientRect();
+              const selected = option.getBoundingClientRect();
+              return selected.top >= bounds.top - 1 && selected.top < bounds.bottom;
+            }, null, { timeout: 5000 });
+          } catch (error) {
+            const state = await popup.evaluate((element) => {
+              const list = element.querySelector("[data-major-filter-list]");
+              const selected = list.querySelector('[aria-selected="true"]');
+              const input = element.querySelector("input");
+              const active = document.getElementById(input.getAttribute("aria-activedescendant"));
+              return {
+                compact: element.getAttribute("data-compact"),
+                availableHeight: getComputedStyle(element).getPropertyValue("--radix-popover-content-available-height"),
+                query: input.value,
+                list: { scrollTop: list.scrollTop, scrollHeight: list.scrollHeight, height: list.clientHeight, bounds: list.getBoundingClientRect().toJSON() },
+                selected: selected ? { name: selected.textContent, offsetTop: selected.offsetTop, offsetParent: selected.offsetParent?.getAttribute("data-major-filter-list"), bounds: selected.getBoundingClientRect().toJSON() } : null,
+                active: active ? { name: active.textContent, bounds: active.getBoundingClientRect().toJSON() } : null,
+              };
+            });
+            report.majorFilterResults.push({ viewport: name, selectedVisibilityFailure: state });
+            await majorPage.screenshot({ path: `${out}/major-filter-selection-failure-${name}.png` });
+            throw error;
+          }
           if (name === "landscape") await majorPage.screenshot({ path: `${out}/major-filter-landscape-long-selection.png` });
           await input.press("Escape");
           await popup.waitFor({ state: "detached" });

@@ -92,16 +92,50 @@ export function MajorFilter({
   }, [open, popup]);
 
   useEffect(() => {
-    if (!open || !activeIsVisible) return;
+    if (!open || !popup || !activeIsVisible) return;
     const element = document.getElementById(optionId(active));
-    if (!element || !list.current) return;
-    const top = element.offsetTop;
-    const bottom = top + element.offsetHeight;
-    if (element.offsetHeight > list.current.clientHeight || top < list.current.scrollTop) list.current.scrollTop = top;
-    else if (bottom > list.current.scrollTop + list.current.clientHeight) {
-      list.current.scrollTop = bottom - list.current.clientHeight;
+    const scroller = list.current;
+    if (!element || !scroller) return;
+    let frame = 0;
+    let settledFrame = 0;
+    function ensureVisible() {
+      if (!element!.isConnected || !scroller!.isConnected || scroller!.clientHeight <= 0) return;
+      // Floating UI can finish width/height measurement after this effect. Rect
+      // differences remain correct across positioned/transformed popup parents.
+      const viewport = scroller!.getBoundingClientRect();
+      const row = element!.getBoundingClientRect();
+      const top = viewport.top + scroller!.clientTop;
+      const bottom = top + scroller!.clientHeight;
+      if (row.height > scroller!.clientHeight || row.top < top) {
+        scroller!.scrollTop += row.top - top;
+      } else if (row.bottom > bottom) {
+        scroller!.scrollTop += row.bottom - bottom;
+      }
     }
-  }, [active, activeIsVisible, compact, id, open, popup, start]);
+    function scheduleScroll() {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(settledFrame);
+      frame = window.requestAnimationFrame(() => {
+        ensureVisible();
+        settledFrame = window.requestAnimationFrame(ensureVisible);
+      });
+    }
+    ensureVisible();
+    scheduleScroll();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleScroll);
+    observer?.observe(scroller);
+    observer?.observe(element);
+    window.addEventListener("resize", scheduleScroll);
+    window.visualViewport?.addEventListener("resize", scheduleScroll);
+    return () => {
+      observer?.disconnect();
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(settledFrame);
+      window.removeEventListener("resize", scheduleScroll);
+      window.visualViewport?.removeEventListener("resize", scheduleScroll);
+    };
+  }, [active, activeIsVisible, compact, filtered, id, open, popup, start]);
 
   function openList(next: boolean) {
     if (next) {
