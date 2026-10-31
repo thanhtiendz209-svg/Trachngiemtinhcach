@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BATCH_SIZE = 80;
@@ -28,12 +28,15 @@ export function MajorFilter({
   const triggerId = `${id}-trigger`;
   const labelId = `${id}-label`;
   const listId = `${id}-list`;
+  const selectionId = `${id}-selection`;
   const input = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [windowStart, setWindowStart] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [popup, setPopup] = useState<HTMLDivElement | null>(null);
+  const [compact, setCompact] = useState(false);
   const choices = useMemo(
     () => [
       { value: "all", label: "Tất cả ngành", search: searchable("Tất cả ngành") },
@@ -56,6 +59,39 @@ export function MajorFilter({
   const selectedLabel = value === "all" ? "Tất cả ngành" : value;
 
   useEffect(() => {
+    if (!open || !popup) return;
+    let frame = 0;
+    function measure() {
+      const available = Number.parseFloat(
+        window
+          .getComputedStyle(popup!)
+          .getPropertyValue("--radix-popover-content-available-height"),
+      );
+      const viewport = window.visualViewport?.height ?? window.innerHeight;
+      setCompact(Number.isFinite(available) && available > 0 ? available < 240 : viewport < 480);
+    }
+    function scheduleMeasure() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(measure);
+    }
+    measure();
+    scheduleMeasure();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleMeasure);
+    observer?.observe(popup);
+    window.addEventListener("resize", scheduleMeasure);
+    window.visualViewport?.addEventListener("resize", scheduleMeasure);
+    window.visualViewport?.addEventListener("scroll", scheduleMeasure);
+    return () => {
+      observer?.disconnect();
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", scheduleMeasure);
+      window.visualViewport?.removeEventListener("resize", scheduleMeasure);
+      window.visualViewport?.removeEventListener("scroll", scheduleMeasure);
+    };
+  }, [open, popup]);
+
+  useEffect(() => {
     if (!open || !activeIsVisible) return;
     const element = document.getElementById(optionId(active));
     if (!element || !list.current) return;
@@ -65,7 +101,7 @@ export function MajorFilter({
     else if (bottom > list.current.scrollTop + list.current.clientHeight) {
       list.current.scrollTop = bottom - list.current.clientHeight;
     }
-  }, [active, activeIsVisible, id, open, start]);
+  }, [active, activeIsVisible, compact, id, open, start]);
 
   function openList(next: boolean) {
     if (next) {
@@ -142,6 +178,7 @@ export function MajorFilter({
             id={triggerId}
             type="button"
             aria-labelledby={labelId}
+            aria-describedby={selectionId}
             data-major-filter-trigger
             className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-mist px-3 py-3 text-left text-sm text-navy outline-none focus-visible:ring-2 focus-visible:ring-azure"
             onKeyDown={(event) => {
@@ -155,7 +192,11 @@ export function MajorFilter({
               }
             }}
           >
-            <span className="min-w-0 flex-1 whitespace-normal break-words" title={selectedLabel}>
+            <span
+              id={selectionId}
+              className="line-clamp-2 min-w-0 flex-1 whitespace-normal break-words"
+              title={selectedLabel}
+            >
               {selectedLabel}
             </span>
             <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-azure" />
@@ -163,11 +204,13 @@ export function MajorFilter({
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
+            ref={setPopup}
             align="start"
             sideOffset={6}
             collisionPadding={12}
             aria-label="Chọn ngành"
             data-major-filter-popup
+            data-compact={compact || undefined}
             className="z-50 flex min-w-0 flex-col overflow-hidden rounded-2xl border border-line bg-paper p-2 text-navy shadow-border-hover"
             style={{
               width: "var(--radix-popover-trigger-width)",
@@ -179,37 +222,64 @@ export function MajorFilter({
               input.current?.focus();
             }}
           >
-            <div className="relative shrink-0">
-              <Search
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-              />
-              <input
-                ref={input}
-                type="text"
-                role="combobox"
-                aria-label="Tìm ngành"
-                aria-autocomplete="list"
-                aria-expanded={open}
-                aria-controls={listId}
-                aria-activedescendant={activeIsVisible ? optionId(active) : undefined}
-                autoComplete="off"
-                placeholder="Gõ tên ngành, có dấu hoặc không dấu..."
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setWindowStart(0);
-                  setActiveIndex(0);
-                  if (list.current) list.current.scrollTop = 0;
-                }}
-                onKeyDown={onSearchKeyDown}
-                className="h-12 w-full rounded-xl bg-mist pl-10 pr-3 text-sm text-navy outline-none focus-visible:ring-2 focus-visible:ring-azure"
-              />
+            <div className={cn("shrink-0", compact && "mb-1 flex items-center gap-1")}>
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+                />
+                <input
+                  ref={input}
+                  type="text"
+                  role="combobox"
+                  aria-label="Tìm ngành"
+                  aria-autocomplete="list"
+                  aria-expanded={open}
+                  aria-controls={listId}
+                  aria-activedescendant={activeIsVisible ? optionId(active) : undefined}
+                  autoComplete="off"
+                  placeholder="Gõ tên ngành, có dấu hoặc không dấu..."
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setWindowStart(0);
+                    setActiveIndex(0);
+                    if (list.current) list.current.scrollTop = 0;
+                  }}
+                  onKeyDown={onSearchKeyDown}
+                  className="h-12 w-full rounded-xl bg-mist pl-10 pr-3 text-sm text-navy outline-none focus-visible:ring-2 focus-visible:ring-azure"
+                />
+              </div>
+              {compact && filtered.length > BATCH_SIZE ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Xem nhóm ngành trước"
+                    disabled={start === 0}
+                    onClick={() => showBatch(Math.max(0, start - BATCH_SIZE))}
+                    className="grid size-11 shrink-0 place-items-center rounded-xl text-azure disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure"
+                  >
+                    <ChevronLeft className="size-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Xem thêm ngành"
+                    disabled={start + BATCH_SIZE >= filtered.length}
+                    onClick={() => showBatch(start + BATCH_SIZE)}
+                    className="grid size-11 shrink-0 place-items-center rounded-xl text-azure disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-azure"
+                  >
+                    <ChevronRight className="size-4" aria-hidden="true" />
+                  </button>
+                </>
+              ) : null}
             </div>
             <p
               role="status"
               aria-live="polite"
-              className="shrink-0 px-2 py-2 text-xs tabular-nums text-muted"
+              className={cn(
+                "shrink-0 text-xs tabular-nums text-muted",
+                compact ? "sr-only" : "px-2 py-2",
+              )}
             >
               {filtered.length
                 ? `${filtered.length} lựa chọn · ${start + 1}–${start + visible.length}`
@@ -258,8 +328,11 @@ export function MajorFilter({
                   </div>
                 );
               })}
+              {compact && !filtered.length ? (
+                <p className="px-3 py-3 text-sm text-muted">Không tìm thấy ngành phù hợp.</p>
+              ) : null}
             </div>
-            {filtered.length > BATCH_SIZE ? (
+            {!compact && filtered.length > BATCH_SIZE ? (
               <div className="mt-1 flex shrink-0 items-center justify-between gap-2 border-t border-line pt-1">
                 <button
                   type="button"

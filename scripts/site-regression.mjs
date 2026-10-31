@@ -630,6 +630,8 @@ try {
           const input = popup.getByRole("combobox", { name: "Tìm ngành", exact: true });
           const options = popup.getByRole("option");
           await visible(input);
+          await majorPage.waitForFunction(() => document.querySelector("[data-major-filter-list]")?.clientHeight >= 44, null, { timeout: 5000 });
+          await majorPage.waitForFunction(() => document.querySelector("[data-major-filter-list]")?.scrollTop <= 1, null, { timeout: 5000 });
           const firstCount = await options.count();
           assert.ok(firstCount > 0 && firstCount <= 81, "Opening a large catalogue mounts a bounded page of options");
           assert.equal(await input.evaluate((element) => element === document.activeElement), true);
@@ -680,6 +682,10 @@ try {
           assert.equal(await trigger.evaluate((element) => element.scrollWidth <= element.clientWidth + 1), true);
           await trigger.click();
           await visible(input);
+          await majorPage.waitForFunction(() => document.querySelector("[data-major-filter-list]")?.clientHeight >= 44, null, { timeout: 5000 });
+          const selectedPopupBounds = await popup.boundingBox();
+          assert.ok(selectedPopupBounds.y >= 0 && selectedPopupBounds.y + selectedPopupBounds.height <= viewport.height + 1);
+          if (name === "landscape") await majorPage.screenshot({ path: `${out}/major-filter-landscape-long-selection.png` });
           await input.press("Escape");
           await popup.waitFor({ state: "detached" });
           assert.equal(await trigger.evaluate((element) => element === document.activeElement), true, "Escape restores focus to the major control");
