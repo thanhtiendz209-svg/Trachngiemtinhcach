@@ -595,6 +595,14 @@ try {
         }
         await visible(generic.getByRole("heading", { name: "Khám phá nhóm nghề", exact: true }));
         await generic.getByRole("heading", { name: "Khám phá nhóm nghề", exact: true }).scrollIntoViewIfNeeded();
+        // Visibility alone includes opacity:0. Wait for the scroll reveal so
+        // this evidence captures the rendered content rather than its first frame.
+        await generic.waitForFunction(() => {
+          const heading = [...document.querySelectorAll("h2, h3")].find((node) => node.textContent === "Khám phá nhóm nghề");
+          const reveal = heading?.closest(".reveal");
+          return reveal && Number(getComputedStyle(reveal).opacity) > 0.99;
+        });
+        await generic.waitForTimeout(300);
         await generic.screenshot({ path: `${out}/stage1-bigfive-generic-mobile.png` });
       } finally { await isolated.close(); }
     });
