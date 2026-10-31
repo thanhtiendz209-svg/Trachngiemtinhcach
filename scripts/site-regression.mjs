@@ -688,6 +688,9 @@ try {
           if (name === "landscape") await majorPage.screenshot({ path: `${out}/major-filter-landscape-long-selection.png` });
           await input.press("Escape");
           await popup.waitFor({ state: "detached" });
+          // Radix restores focus in a zero-delay unmount task, after the portal
+          // detaches. Assert the eventual focus target rather than racing it.
+          await majorPage.waitForFunction((id) => document.activeElement === document.getElementById(id), await trigger.getAttribute("id"), { timeout: 5000 });
           assert.equal(await trigger.evaluate((element) => element === document.activeElement), true, "Escape restores focus to the major control");
           await explorer.getByRole("button", { name: "Xóa bộ lọc", exact: true }).click();
           assert.match(await trigger.textContent(), /Tất cả ngành/);
