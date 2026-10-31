@@ -88,7 +88,7 @@ const SourceRecord = memo(function SourceRecord({ source, floorScope }: {
     <article className="rounded-xl border border-line p-3 sm:p-4" data-source-row={floorScope ? undefined : source.row} data-floor-source-row={floorScope ? source.row : undefined} data-floor-scope={floorScope}>
       {floorScope ? <p className="mb-3 text-xs font-semibold leading-relaxed text-azure">{floorScope === "school" ? "Áp dụng chung toàn trường (mã *)" : "Theo mã chương trình"} · {source.schoolCode} · {source.code}</p> : null}
       <Fields compact columns={[
-        { label: "Giá trị trong nguồn", value: source.value, prominent: true },
+        { label: "Điểm tham khảo", value: source.value, prominent: true },
         { label: "Thang điểm", value: source.scale },
         { label: "Phương thức", value: source.method, wide: true },
         ...(source.combinations ? [{ label: "Tổ hợp môn", value: source.combinations, wide: true }] : []),

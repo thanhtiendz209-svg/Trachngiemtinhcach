@@ -217,7 +217,7 @@ async function stage1Floor(page, schoolId, code, rowId, sourceRow, value, scope,
   const floor = reference.locator(`[data-floor-source-row="${sourceRow}"]`);
   await visible(floor);
   const values = await fields(floor);
-  assert.equal(Number(values["Giá trị trong nguồn"]), value);
+  assert.equal(Number(values["Điểm tham khảo"]), value);
   assert.equal(values["Thang điểm"], "30");
   assert.equal(values["Loại dữ liệu"], "Điểm sàn");
   assert.equal(values["Năm"], "2026");
@@ -382,13 +382,13 @@ try {
       const thptFields = await fields(thpt);
       assert.equal(thptFields["Phương thức"], "Điểm thi THPT");
       assert.equal(thptFields["Thang điểm"], "30");
-      assert.equal(Number(thptFields["Giá trị trong nguồn"]), 25.5);
+      assert.equal(Number(thptFields["Điểm tham khảo"]), 25.5);
       assert.equal(thptFields["Loại dữ liệu"], "Trúng tuyển");
       assert.match(thptFields["Phân loại"], /tham khảo/);
       assert.match(await thpt.getByRole("link", { name: "Xem nguồn", exact: true }).getAttribute("href"), /^https:\/\//);
       const tsa = await fields(reference.locator('[data-source-row="111"]'));
       assert.equal(tsa["Thang điểm"], "100");
-      assert.equal(Number(tsa["Giá trị trong nguồn"]), 58.81);
+      assert.equal(Number(tsa["Điểm tham khảo"]), 58.81);
       assert.equal(await reference.locator("[data-source-row]").count(), document.programs.find((entry) => entry.id === "uni-001-row-16").sourceRows.length);
       await reference.locator(":scope > summary").click();
       assert.equal(await thpt.isVisible(), false, "Reference points can be collapsed independently");
@@ -430,7 +430,7 @@ try {
       const values = await fields(source);
       assert.equal(values["Phương thức"], "Điểm thi THPT");
       assert.equal(values["Thang điểm"], "30");
-      assert.equal(Number(values["Giá trị trong nguồn"]), 25.9);
+      assert.equal(Number(values["Điểm tham khảo"]), 25.9);
       report.admissionsResults.neuNewProgram = { code: "7310101_2", point: 25.9, scale: "30" };
       await source.scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/school-neu-new-program-desktop.png` });
@@ -473,7 +473,7 @@ try {
       const floor = reference.locator('[data-floor-source-row="21923"]');
       await visible(floor);
       const values = await fields(floor);
-      assert.equal(Number(values["Giá trị trong nguồn"]), 16.5, "Keep the original floor with its exact source even without cutoff references");
+      assert.equal(Number(values["Điểm tham khảo"]), 16.5, "Keep the original floor with its exact source even without cutoff references");
       assert.equal(values["Loại dữ liệu"], "Điểm sàn");
       assert.equal(values["Thang điểm"], "30");
       assert.match(await floor.getByRole("link", { name: "Xem nguồn", exact: true }).getAttribute("href"), /hcmufa\.edu\.vn/);
@@ -739,7 +739,7 @@ try {
       const reference = await referencePoints(program);
       const thpt = reference.locator('[data-source-row="28"]');
       await visible(thpt);
-      assert.equal(Number((await fields(thpt))["Giá trị trong nguồn"]), 25.5, "Mobile users see reference points immediately after opening a program");
+      assert.equal(Number((await fields(thpt))["Điểm tham khảo"]), 25.5, "Mobile users see reference points immediately after opening a program");
       await reference.locator(":scope > summary").scrollIntoViewIfNeeded();
       assert.equal(await mobilePage.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, "Source fields fit a mobile screen");
       await mobilePage.screenshot({ path: `${out}/school-hust-source-mobile.png` });
