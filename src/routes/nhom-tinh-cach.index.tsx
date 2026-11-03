@@ -15,7 +15,7 @@ function TypesPage() {
           <Reveal>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-azure">Thư viện nhóm</p>
             <h1 className="mt-2 max-w-2xl font-display text-4xl font-semibold text-navy">
-              Mười sáu cách nhìn thế giới
+              16 nhóm MBTI & 6 nhóm RIASEC
             </h1>
             <p className="mt-3 max-w-xl text-muted">
               Lọc theo nhóm, mở chi tiết, đối chiếu với kết quả test của bạn.

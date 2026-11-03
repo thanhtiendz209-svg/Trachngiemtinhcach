@@ -1,4 +1,5 @@
 import type { PersonalityGroup, PersonalityType } from "./types";
+import { RIASEC_TYPES } from "./riasec";
 
 function img(id: string) {
   return `/personality/${id}.webp`;
@@ -10,6 +11,7 @@ export const PERSONALITY_GROUPS: { id: PersonalityGroup | "all"; label: string }
   { id: "creative", label: "Nhóm sáng tạo" },
   { id: "social", label: "Nhóm xã hội" },
   { id: "organizer", label: "Nhóm tổ chức" },
+  { id: "origin", label: "Nhóm khởi nguồn" },
 ];
 
 export const PERSONALITIES: PersonalityType[] = [
@@ -559,8 +561,10 @@ export const PERSONALITIES: PersonalityType[] = [
   },
 ];
 
+export const ORIGIN_PERSONALITIES: PersonalityType[] = RIASEC_TYPES.map((type) => ({ ...type, group: "origin" }));
+
 export const PERSONALITY_MAP = Object.fromEntries(
-  PERSONALITIES.map((p) => [p.id, p]),
+  [...PERSONALITIES, ...ORIGIN_PERSONALITIES].map((p) => [p.id, p]),
 ) as Record<string, PersonalityType>;
 
 export function getPersonality(id: string) {

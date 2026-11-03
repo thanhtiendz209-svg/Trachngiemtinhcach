@@ -42,7 +42,7 @@ export function Hero() {
           <dl className="reveal is-in mt-10 grid grid-cols-3 gap-3 max-w-md" style={{ transitionDelay: "320ms" }}>
             {[
               ["3", "bài test"],
-              ["16", "nhóm tính cách"],
+              ["16+6", "nhóm MBTI & RIASEC"],
               ["10+", "nhóm ngành"],
             ].map(([n, l]) => (
               <div key={l} className="rounded-[var(--radius-lg)] bg-card/70 px-3 py-3 shadow-border">

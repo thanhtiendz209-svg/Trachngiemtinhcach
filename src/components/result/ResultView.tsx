@@ -70,7 +70,7 @@ export function ResultView({ result, profileContext = "result" }: { result: Quiz
           <Reveal>
             <div className="overflow-hidden rounded-[28px] shadow-border-hover">
               {person ? (
-                <TypeImage id={person.id} src={person.image} alt={heroAlt} priority className="aspect-square w-full object-cover" />
+                <TypeImage id={person.id} src={person.image} alt={heroAlt} priority className={topHolland ? "aspect-[10/11] w-full bg-ice object-contain" : "aspect-square w-full object-cover"} />
               ) : heroImg ? (
                 <img src={heroImg} alt={heroAlt} fetchPriority="high" decoding="async" className="aspect-square w-full object-cover" />
               ) : (

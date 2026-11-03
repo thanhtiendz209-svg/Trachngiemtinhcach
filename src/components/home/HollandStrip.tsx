@@ -26,7 +26,7 @@ export function HollandStrip() {
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  className="h-full w-28 shrink-0 object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04] sm:w-32"
+                  className="h-full w-28 shrink-0 bg-ice object-contain transition-transform duration-300 ease-out group-hover:scale-[1.04] sm:w-32"
                 />
                 <div className="p-4">
                   <p className="font-display text-sm font-semibold tracking-[0.16em] text-azure">{t.id}</p>

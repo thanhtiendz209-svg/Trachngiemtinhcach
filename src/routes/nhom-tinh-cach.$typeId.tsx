@@ -17,7 +17,7 @@ function TypeRoute() {
         <div className="mx-auto max-w-lg px-4 py-24 text-center">
           <h1 className="font-display text-2xl font-semibold text-navy">Không có nhóm này</h1>
           <Button asChild className="mt-6">
-            <Link to="/nhom-tinh-cach">Khám phá 16 nhóm</Link>
+            <Link to="/nhom-tinh-cach">Khám phá các nhóm tính cách</Link>
           </Button>
         </div>
       </SiteShell>

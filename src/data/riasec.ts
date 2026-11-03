@@ -8,7 +8,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích thao tác, máy móc, ngoài trời, kết quả sờ được.",
     description:
       "Nhóm Thực tế thích việc có sản phẩm nhìn thấy được: sửa, lắp, chế, vận hành. Bạn yên hơn khi tay đang làm và đầu đang hiểu cơ chế, hơn là ngồi bàn luận vòng.",
-    image: "/riasec/R.webp",
+    image: "/riasec/animated/R.svg",
     highlights: ["Tay nghề", "Kết quả hữu hình", "Độc lập thao tác", "Hiện trường"],
     thinking: "Bạn nghĩ bằng việc: tháo ra, thử, chỉnh, xem nó chạy. Lý thuyết chỉ đáng giá khi giải thích được thứ đang cầm.",
     interacting: "Ít lời, đúng việc. Tôn trọng người làm được. Ngại họp dài không ra quyết định.",
@@ -27,7 +27,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích phân tích, thí nghiệm, dữ liệu và câu hỏi khó.",
     description:
       "Nhóm Nghiên cứu sống với câu hỏi. Bạn chịu được sự chưa biết, thích đào cơ chế, và khó chịu khi bị ép chốt sớm chỉ để cho có tiến độ.",
-    image: "/riasec/I.webp",
+    image: "/riasec/animated/I.svg",
     highlights: ["Tò mò", "Phân tích", "Độc lập trí tuệ", "Sâu"],
     thinking: "Chạy giả thuyết, kiểm chứng, sửa mô hình. Kết luận đến sau bằng chứng.",
     interacting: "Thoải mái với người chịu được im lặng và câu hỏi lạ. Ngại small talk.",
@@ -46,7 +46,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích biểu đạt, hình ảnh, ngôn ngữ, không gian tự do.",
     description:
       "Nhóm Nghệ thuật muốn ngày làm việc có chỗ cho giọng riêng. Bạn nhạy với cái đẹp, không khí, và khó chịu khi bị ép vào khuôn không còn chỗ cho cá tính.",
-    image: "/riasec/A.webp",
+    image: "/riasec/animated/A.svg",
     highlights: ["Biểu đạt", "Thẩm mỹ", "Độc đáo", "Cảm xúc"],
     thinking: "Nghĩ bằng hình, nhịp, câu chuyện. Ý phải ‘đúng cảm’ chứ không chỉ đúng checklist.",
     interacting: "Mở với người tôn trọng giọng mình. Dễ tắt khi bị chê giữa đám đông.",
@@ -65,7 +65,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích dạy, hỗ trợ, chăm sóc, làm việc vì con người.",
     description:
       "Nhóm Xã hội thấy việc có nghĩa khi có người cụ thể ở đầu kia. Bạn lắng nghe được, muốn người khác ổn hơn, và kiệt nếu chỉ làm với máy suốt tuần.",
-    image: "/riasec/S.webp",
+    image: "/riasec/animated/S.svg",
     highlights: ["Lắng nghe", "Đồng hành", "Chăm sóc", "Khai mở"],
     thinking: "Đặt người vào giữa bài toán. Hỏi ‘ai cần gì’ trước ‘việc chạy sao’.",
     interacting: "Ấm, kiên nhẫn, hay đứng về phía người yếu hơn trong phòng.",
@@ -84,7 +84,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích thuyết phục, kinh doanh, điều phối, mục tiêu.",
     description:
       "Nhóm Dẫn dắt muốn việc có đích, có cuộc chơi, có người đi cùng. Bạn thích thuyết phục, chốt, và thấy năng lượng dâng khi phòng bắt đầu chuyển.",
-    image: "/riasec/E.webp",
+    image: "/riasec/animated/E.svg",
     highlights: ["Thuyết phục", "Mục tiêu", "Điều phối", "Quyết"],
     thinking: "Nghĩ theo đòn bẩy: cái gì ra kết quả, ai cần được kéo, việc nào bỏ.",
     interacting: "Nhanh, thẳng, kỳ vọng rõ. Tôn trọng người làm được việc.",
@@ -103,7 +103,7 @@ export const RIASEC_TYPES: RiasecType[] = [
     summary: "Thích quy trình, dữ liệu có cấu trúc, trật tự, chính xác.",
     description:
       "Nhóm Vận hành yên khi mọi thứ có chỗ. Bạn thích checklist, mốc, tiêu chuẩn, và khó chịu với sự mơ hồ được gọi là ‘linh hoạt’.",
-    image: "/riasec/C.webp",
+    image: "/riasec/animated/C.svg",
     highlights: ["Trật tự", "Chính xác", "Quy trình", "Đáng tin"],
     thinking: "Xếp thông tin vào khung. Sai số, hạn, giấy tờ không phải chuyện nhỏ.",
     interacting: "Đúng hẹn, đúng lời. Ít improvises giữa chừng nếu chưa sửa kế hoạch.",
