@@ -19,8 +19,8 @@ function ProfilePage() {
       const latest = profile.all.filter((result) => Number.isFinite(Date.parse(result.completedAt)))
         .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))[0];
       return {
-        quizId: "combined",
-        kind: "combined",
+        quizId: "profile",
+        kind: profile.mbti ? "mbti" : profile.riasec ? "riasec" : "bigfive",
         completedAt: latest?.completedAt ?? new Date().toISOString(),
         mbti: profile.mbti,
         axes: profile.axes,
