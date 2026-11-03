@@ -74,14 +74,14 @@ export function bigfiveFromScores(scores: Record<string, number>) {
 
 export function resultTitle(result: QuizResult) {
   if (result.kind === "riasec" && result.riasec) {
-    return `Mã RIASEC ${result.riasec.code}`;
+    return `Mã RIASEC: ${result.riasec.code}`;
   }
   if (result.mbti) {
     const p = getPersonality(result.mbti);
     return p ? `Bạn thuộc nhóm ${result.mbti}` : `Nhóm ${result.mbti}`;
   }
   if (result.riasec) {
-    return `Mã RIASEC ${result.riasec.code}`;
+    return `Mã RIASEC: ${result.riasec.code}`;
   }
   if (result.bigfive) return "Hồ sơ Big Five của bạn";
   return "Hồ sơ của bạn";
