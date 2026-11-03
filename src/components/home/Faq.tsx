@@ -9,7 +9,7 @@ const ITEMS = [
   },
   {
     q: "MBTI, RIASEC và Big Five khác nhau thế nào?",
-    a: "MBTI kể câu chuyện về 16 nhóm. RIASEC (Holland) nhìn sở thích nghề theo 6 kiểu việc. Big Five đo năm chiều tính cách theo mức độ. Hồ sơ tổng hợp lấy cả tính cách lẫn sở thích trong một lần.",
+    a: "MBTI kể câu chuyện về 16 nhóm. RIASEC (Holland) nhìn sở thích nghề theo 6 kiểu việc. Big Five đo năm chiều tính cách theo mức độ. Bạn có thể xem các kết quả đã làm cùng nhau trong mục Hồ sơ.",
   },
   {
     q: "Có cần tài khoản không? Dữ liệu nằm đâu?",
@@ -25,7 +25,7 @@ const ITEMS = [
   },
   {
     q: "Làm bài mất bao lâu? Có được quay lại không?",
-    a: "Khoảng 6–12 phút tùy bài. Một câu một nhịp, quay lại câu trước, đáp án cũ được giữ. Phím 1–4 để chọn, Enter để tiếp tục.",
+    a: "Khoảng 7–15 phút tùy bài. Một câu một nhịp, quay lại câu trước, đáp án cũ được giữ. Phím 1–4 để chọn, Enter để tiếp tục.",
   },
 ];
 
