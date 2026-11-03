@@ -32,8 +32,8 @@ export function RiasecResult({ riasec, showUniversity = true, careerProfile, pro
     <>
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <Reveal>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-azure">Mã RIASEC</p>
-          <h2 className="mt-2 font-display text-3xl font-semibold text-navy">{riasec.code}</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-azure">Tổ hợp RIASEC</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-navy">Mã RIASEC: {riasec.code}</h2>
           <p className="mt-2 font-display text-lg text-azure">{combo.title}</p>
           {combo.source === "fallback" ? (
             <p className="mt-2 rounded-[16px] bg-ice px-4 py-3 text-sm text-muted">
