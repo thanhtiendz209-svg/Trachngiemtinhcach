@@ -265,7 +265,7 @@ function RawRows({ headers, rows, label, searchable = false }: {
   return (
     <div data-raw-kind={label}>
       {searchable ? <input aria-label={`Tìm ${label}`} placeholder="Tìm mã, ngành, tổ hợp hoặc điều kiện..." className="mb-3 h-12 w-full rounded-2xl bg-mist px-4 text-sm text-navy outline-none focus-visible:ring-2 focus-visible:ring-azure" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} /> : null}
-      <p className="mb-3 text-sm text-muted" role="status">{filtered.length} dòng {label}</p>
+      <p className="mb-3 text-sm text-muted" role="status">{filtered.length} {label === "giả định" ? "điểm giả định" : `dòng ${label}`}</p>
       <div className="space-y-3" aria-busy={query !== deferredQuery}>
         {filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE).map(({ row, index }) => {
           const outsideScale = row.some((value) => typeof value === "string" && /ngoài thang|vượt thang|không khả thi/i.test(value));
@@ -308,7 +308,7 @@ function AdmissionsContent({ document, initialProgramCode }: {
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Chọn nhóm dữ liệu tuyển sinh">
         {([
           ["source", "Ngành và Điểm"],
-          ["assumptions", "Đầu và đối chiếu"],
+          ["assumptions", "Dữ Liệu Giả Định"],
         ] as const).map(([id, title]) => (
           <Button key={id} type="button" size="sm" variant={view === id ? "primary" : "secondary"} className="min-h-11 font-semibold" aria-pressed={view === id} aria-controls={viewId} onClick={() => setView(id)}>{title}</Button>
         ))}
@@ -316,8 +316,7 @@ function AdmissionsContent({ document, initialProgramCode }: {
       <div id={viewId}>
         {view === "source" ? <SourcesView document={document} initialProgramCode={initialProgramCode} /> : null}
         {view === "assumptions" ? (
-          <section aria-label="Đầu và đối chiếu" data-admissions-view="assumptions">
-            <h3 className="mb-3 font-display text-lg font-semibold text-navy">Đầu vào và giả định</h3>
+          <section aria-label="Dữ Liệu Giả Định" data-admissions-view="assumptions">
             <RawRows headers={inputs.headers} rows={inputs.rows} label="giả định" searchable />
             <h3 className="mb-3 mt-6 font-display text-lg font-semibold text-navy">Các dòng cần đối chiếu</h3>
             <RawRows headers={document.verification.headers} rows={document.verification.rows} label="đối chiếu" searchable />
