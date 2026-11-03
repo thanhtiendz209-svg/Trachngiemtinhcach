@@ -19,8 +19,8 @@ function ProfilePage() {
       const latest = profile.all.filter((result) => Number.isFinite(Date.parse(result.completedAt)))
         .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))[0];
       return {
-        quizId: "combined",
-        kind: "combined",
+        quizId: "profile",
+        kind: profile.mbti ? "mbti" : profile.riasec ? "riasec" : "bigfive",
         completedAt: latest?.completedAt ?? new Date().toISOString(),
         mbti: profile.mbti,
         axes: profile.axes,
@@ -53,7 +53,7 @@ function ProfilePage() {
       ) : (
         <>
           <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {QUIZZES.map((q) => {
                 const done = all.find((r) => r.quizId === q.id);
                 return (

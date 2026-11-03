@@ -38,30 +38,6 @@ export const QUIZZES: QuizMeta[] = [
     icon: "spark",
     image: "/illustrations/quiz-mbti.webp",
   },
-  {
-    id: "interest",
-    kind: "interest",
-    name: "Sở thích nghề nghiệp",
-    tagline: "Việc nào làm bạn thấy sống",
-    description:
-      "Không hỏi bạn ‘giỏi gì’, mà hỏi bạn muốn chạm vào loại việc nào. Dùng làm gợi ý hướng đi, không phải lời kết.",
-    duration: "6–8 phút",
-    questionCount: questionsFor("interest").length,
-    icon: "heart",
-    image: "/illustrations/quiz-interest.webp",
-  },
-  {
-    id: "combined",
-    kind: "combined",
-    name: "Hồ sơ hướng nghiệp tổng hợp",
-    tagline: "Tính cách + sở thích trong một lần",
-    description:
-      "Phiên bản rút gọn kết hợp xu hướng tính cách và sở thích nghề, cho một hồ sơ tổng quan để bắt đầu khám phá.",
-    duration: "8–10 phút",
-    questionCount: questionsFor("combined").length,
-    icon: "map",
-    image: "/illustrations/quiz-combined.webp",
-  },
 ];
 
 export function getQuiz(id: string) {

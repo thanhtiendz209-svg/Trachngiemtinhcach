@@ -113,9 +113,13 @@ export function ResultView({ result, profileContext = "result" }: { result: Quiz
                 </Button>
               ) : null}
               <Button asChild variant="secondary">
-                <Link to="/trac-nghiem/$quizId" params={{ quizId: result.quizId }}>
-                  Làm lại bài test
-                </Link>
+                {profileContext === "current" ? (
+                  <Link to="/trac-nghiem">Chọn bài trắc nghiệm</Link>
+                ) : (
+                  <Link to="/trac-nghiem/$quizId" params={{ quizId: result.quizId }}>
+                    Làm lại bài test
+                  </Link>
+                )}
               </Button>
               <Button variant="ghost" type="button" onClick={() => copyProfile(result)}>
                 <Copy className="size-4" />

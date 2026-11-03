@@ -734,7 +734,7 @@ try {
     });
   }
 
-  for (const quizId of ["riasec", "bigfive", "mbti", "interest", "combined"]) {
+  for (const quizId of ["riasec", "bigfive", "mbti"]) {
     await check(`${quizId}: answering, back, resume, scoring, result and restart`, async () => {
       await navigate(page, `${origin}/trac-nghiem/${quizId}`);
       const start = page.getByRole("button", { name: "Bắt đầu", exact: true });

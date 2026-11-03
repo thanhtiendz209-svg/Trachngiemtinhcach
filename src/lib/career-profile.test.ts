@@ -108,89 +108,54 @@ describe("shared career matching", () => {
   });
 });
 
-describe("deterministic current quiz profile", () => {
-  it("selects the newest relevant results independently instead of letting the last Big Five overwrite them", () => {
+describe("current profile with only MBTI, RIASEC and Big Five", () => {
+  it("merges the three dedicated inventories without losing saved data", () => {
     const axes = { energy: 71, sensing: 22, thinking: 33, judging: 44 };
-    const latestInterest = { ...preferences, code: "SEC", scores: { R: 1, I: 2, A: 3, S: 18, E: 17, C: 16 } };
     const input = [
       result("bigfive", "2026-10-31T12:00:00Z", { bigfive: { O: 80 } }),
       result("riasec", "2026-10-25T10:00:00Z", { riasec: preferences }),
-      result("combined", "2026-10-29T10:00:00Z", { mbti: "ENFP", axes, riasec: preferences }),
-      result("mbti", "2026-10-26T10:00:00Z", { mbti: "INTJ" }),
-      result("interest", "2026-10-30T10:00:00Z", { riasec: latestInterest }),
+      result("mbti", "2026-10-26T10:00:00Z", { mbti: "INTJ", axes }),
     ];
-    const original = structuredClone(input);
-    const profile = mergeQuizResults(input);
-    assert.equal(profile.mbti, "ENFP");
-    assert.deepEqual(profile.axes, axes);
-    assert.deepEqual(profile.riasec, latestInterest);
-    assert.deepEqual(profile.bigfive, { O: 80 });
-    assert.equal(profile.sources.mbti?.quizId, "combined");
-    assert.equal(profile.sources.riasec?.quizId, "interest");
-    assert.equal(profile.sources.bigfive?.quizId, "bigfive");
-    assert.deepEqual(input, original, "Merging must not mutate stored results");
-    const reversed = mergeQuizResults([...input].reverse());
-    assert.equal(reversed.mbti, profile.mbti);
-    assert.deepEqual(reversed.riasec, profile.riasec);
-    assert.equal(reversed.sources.mbti?.quizId, profile.sources.mbti?.quizId);
-    assert.equal(reversed.sources.riasec?.quizId, profile.sources.riasec?.quizId);
+    const snapshot = structuredClone(input);
+    const merged = mergeQuizResults(input);
+    assert.equal(merged.mbti, "INTJ");
+    assert.deepEqual(merged.axes, axes);
+    assert.deepEqual(merged.riasec, preferences);
+    assert.deepEqual(merged.bigfive, { O: 80 });
+    assert.equal(merged.sources.mbti?.quizId, "mbti");
+    assert.equal(merged.sources.riasec?.quizId, "riasec");
+    assert.equal(merged.sources.bigfive?.quizId, "bigfive");
+    assert.deepEqual(input, snapshot);
+    assert.deepEqual(mergeQuizResults([...input].reverse()).riasec, preferences);
   });
 
-  it("uses documented dedicated-inventory priority only when timestamps tie", () => {
-    const at = "2026-10-31T10:00:00Z";
-    const official = { ...preferences, code: "RIC" };
-    const input = [
-      result("combined", at, { mbti: "ENFP", riasec: { ...preferences, code: "AIR" } }),
-      result("interest", at, { riasec: { ...preferences, code: "SEC" } }),
-      result("riasec", at, { riasec: official }),
-      result("mbti", at, { mbti: "INTJ" }),
-    ];
-    for (const ordered of [input, [...input].reverse()]) {
-      const profile = mergeQuizResults(ordered);
-      assert.equal(profile.mbti, "INTJ");
-      assert.deepEqual(profile.riasec, official);
-      assert.equal(profile.sources.mbti?.quizId, "mbti");
-      assert.equal(profile.sources.riasec?.quizId, "riasec");
-    }
-  });
-
-  it("prefers interest to combined on a RIASEC timestamp tie without a dedicated Holland result", () => {
-    const profile = mergeQuizResults([
-      result("combined", "2026-10-31T10:00:00Z", { riasec: { ...preferences, code: "AIR" } }),
-      result("interest", "2026-10-31T10:00:00Z", { riasec: { ...preferences, code: "SEC" } }),
-    ]);
-    assert.equal(profile.sources.riasec?.quizId, "interest");
-  });
-
-  it("ranks an invalid date behind a valid relevant result", () => {
+  it("picks the newest valid results without fabricating career-fit data from Big Five", () => {
+    const newer = { ...preferences, code: "SEC", scores: { R: 1, I: 2, A: 3, S: 18, E: 17, C: 16 } };
     const profile = mergeQuizResults([
       result("riasec", "not-a-date", { riasec: preferences }),
-      result("interest", "2026-01-01T00:00:00Z", { riasec: { ...preferences, code: "SEC" } }),
+      result("riasec", "2026-10-31T10:00:00Z", { riasec: newer }),
+      result("riasec", "2026-11-01T10:00:00Z", { riasec: { code: "RIA", scores: {} } }),
+      result("bigfive", "2026-11-02T10:00:00Z", { bigfive: { O: 80 } }),
     ]);
-    assert.equal(profile.sources.riasec?.quizId, "interest");
+    assert.deepEqual(profile.riasec, newer);
+    assert.equal(profile.sources.riasec?.quizId, "riasec");
+    assert.equal(hasCareerProfile(profile), true);
+    const bigfiveOnly = mergeQuizResults([result("bigfive", "2026-11-02T10:00:00Z", { bigfive: { O: 80 } })]);
+    assert.equal(careerMatch(CAREERS[0], bigfiveOnly), null);
   });
 
-  it("does not attach axes from an older MBTI result to a newer different personality type", () => {
+  it("keeps MBTI axes paired with the latest MBTI result", () => {
     const profile = mergeQuizResults([
       result("mbti", "2026-10-30T10:00:00Z", { mbti: "INTJ", axes: { energy: 10, sensing: 20, thinking: 90, judging: 80 } }),
-      result("combined", "2026-10-31T10:00:00Z", { mbti: "ENFP" }),
+      result("mbti", "2026-10-31T10:00:00Z", { mbti: "ENFP" }),
     ]);
     assert.equal(profile.mbti, "ENFP");
     assert.equal(profile.axes, undefined);
   });
 
-  it("ignores a newer unusable RIASEC vector while retaining the latest usable saved preference result", () => {
-    const profile = mergeQuizResults([
-      result("riasec", "2026-10-31T10:00:00Z", { riasec: { code: "RIA", scores: {} } }),
-      result("interest", "2026-10-30T10:00:00Z", { riasec: preferences }),
-    ]);
-    assert.equal(profile.sources.riasec?.quizId, "interest");
-    assert.equal(hasCareerProfile(profile), true);
-  });
-
-  it("keeps a historical result's recommendations separate from the current merged profile", () => {
+  it("keeps historical MBTI suggestions separate from current saved profile", () => {
     const older = result("mbti", "2026-10-30T10:00:00Z", { mbti: "INTJ" });
-    const current = mergeQuizResults([older, result("combined", "2026-10-31T10:00:00Z", { mbti: "ENFP" })]);
+    const current = mergeQuizResults([older, result("mbti", "2026-10-31T10:00:00Z", { mbti: "ENFP" })]);
     const historical = careerProfileFromResult(older);
     assert.equal(historical.mbti, "INTJ");
     assert.equal(current.mbti, "ENFP");

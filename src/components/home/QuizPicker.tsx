@@ -1,17 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Clock, Compass, Heart, Layers, Map, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Compass, Layers, Sparkles } from "lucide-react";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { QUIZZES } from "@/data/quizzes";
 import { useAllQuizStatus } from "@/lib/use-quiz-status";
-import { cn } from "@/lib/utils";
 
 const ICONS = {
   compass: Compass,
   layers: Layers,
   spark: Sparkles,
-  heart: Heart,
-  map: Map,
 };
 
 export function QuizPicker({ heading = "Chọn bài trắc nghiệm phù hợp với bạn" }: { heading?: string }) {
@@ -27,29 +24,21 @@ export function QuizPicker({ heading = "Chọn bài trắc nghiệm phù hợp v
             Làm từng câu một, lưu tiến độ trên máy bạn, xem lại kết quả bất cứ lúc nào.
           </p>
         </Reveal>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
           {QUIZZES.map((q, i) => {
             const Icon = ICONS[q.icon];
             const st = status[q.id];
-            const featured = q.id === "combined";
             return (
               <Reveal
                 key={q.id}
                 delay={70 + i * 70}
                 as="article"
-                className={featured ? "md:col-span-2" : undefined}
               >
                 <article
-                  className={cn(
-                    "group flex h-full flex-col overflow-hidden rounded-[24px] bg-card shadow-border transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-border-hover",
-                    featured && "md:flex-row",
-                  )}
+                  className="group flex h-full flex-col overflow-hidden rounded-[24px] bg-card shadow-border transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-border-hover"
                 >
                   <div
-                    className={cn(
-                      "relative overflow-hidden bg-ice",
-                      featured ? "aspect-[16/10] md:aspect-auto md:w-[46%]" : "aspect-[16/10]",
-                    )}
+                    className="relative aspect-[16/10] overflow-hidden bg-ice"
                   >
                     <img
                       src={q.image}
