@@ -1,6 +1,6 @@
 import type { UniversityAdmissionsSummary } from "./university-admissions-types";
 
-export type PersonalityGroup = "analyst" | "creative" | "social" | "organizer";
+export type PersonalityGroup = "analyst" | "creative" | "social" | "organizer" | "origin";
 
 export interface PersonalityType {
   id: string;
