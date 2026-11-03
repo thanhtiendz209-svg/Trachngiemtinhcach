@@ -59,7 +59,8 @@ export function saveResult(result: QuizResult) {
 }
 
 export function loadLastResult() {
-  return read<QuizResult>(LAST);
+  const last = read<QuizResult>(LAST);
+  return last && QUIZZES.some((quiz) => quiz.id === last.quizId) ? last : null;
 }
 
 export function hasPartialProgress(quizId: string) {
