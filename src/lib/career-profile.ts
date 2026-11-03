@@ -78,13 +78,13 @@ function latestResult(results: readonly QuizResult[], priority: QuizResult["kind
 
 /**
  * Each dimension uses its newest usable saved result. At equal completion times,
- * prefer the dedicated inventory: RIASEC > interest > combined; MBTI > combined.
+ * use only the supported dedicated inventories: RIASEC and MBTI.
  * Invalid dates are oldest. Big Five does not replace either career dimension.
  * MBTI axes always come from the same selected result as the MBTI type.
  */
 export function mergeQuizResults(results: readonly QuizResult[]) {
-  const mbti = latestResult(results, ["mbti", "combined"], (result) => Boolean(validMbti(result.mbti)));
-  const riasec = latestResult(results, ["riasec", "interest", "combined"], (result) => Boolean(usableRiasec(result.riasec)));
+  const mbti = latestResult(results, ["mbti"], (result) => Boolean(validMbti(result.mbti)));
+  const riasec = latestResult(results, ["riasec"], (result) => Boolean(usableRiasec(result.riasec)));
   const bigfive = latestResult(results, ["bigfive"], (result) => Boolean(result.bigfive));
   return {
     all: [...results],
