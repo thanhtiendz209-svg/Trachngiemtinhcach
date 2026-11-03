@@ -41,7 +41,7 @@ export function Hero() {
           </div>
           <dl className="reveal is-in mt-10 grid grid-cols-3 gap-3 max-w-md" style={{ transitionDelay: "320ms" }}>
             {[
-              ["5", "bài test"],
+              ["3", "bài test"],
               ["16", "nhóm tính cách"],
               ["10+", "nhóm ngành"],
             ].map(([n, l]) => (
