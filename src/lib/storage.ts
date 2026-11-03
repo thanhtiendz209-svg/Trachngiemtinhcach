@@ -7,6 +7,19 @@ const RESULT = (id: string) => `lumina-result-${id}`;
 const LAST = "lumina-last-result";
 export const QUIZ_RESULTS_CHANGED = "lumina-results-changed";
 
+// Retire data created by the two removed tests without touching supported profiles.
+function cleanRetiredQuizData() {
+  if (typeof window === "undefined") return;
+  for (const id of ["interest", "combined"]) {
+    remove(PROGRESS(id));
+    remove(RESULT(id));
+  }
+  const last = read<QuizResult>(LAST);
+  if (last && !QUIZZES.some((quiz) => quiz.id === last.quizId)) {
+    remove(LAST);
+  }
+}
+
 function read<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
   try {
@@ -59,6 +72,7 @@ export function saveResult(result: QuizResult) {
 }
 
 export function loadLastResult() {
+  cleanRetiredQuizData();
   const last = read<QuizResult>(LAST);
   return last && QUIZZES.some((quiz) => quiz.id === last.quizId) ? last : null;
 }
@@ -70,6 +84,7 @@ export function hasPartialProgress(quizId: string) {
 }
 
 export function loadAllResults() {
+  cleanRetiredQuizData();
   return QUIZZES.map((q) => loadResult(q.id)).filter((r): r is QuizResult => Boolean(r));
 }
 
