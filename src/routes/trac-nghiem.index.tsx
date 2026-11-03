@@ -21,7 +21,7 @@ function QuizzesPage() {
           </Reveal>
         </div>
       </div>
-      <QuizPicker heading="Năm bài, một nhịp khám phá" />
+      <QuizPicker heading="Ba bài test, ba góc nhìn về bản thân" />
     </SiteShell>
   );
 }
