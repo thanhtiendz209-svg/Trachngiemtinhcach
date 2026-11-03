@@ -4,7 +4,7 @@ const STEPS = [
   {
     n: "01",
     title: "Chọn bài test",
-    body: "MBTI, RIASEC, Big Five hoặc hồ sơ tổng hợp — chọn nhịp bạn muốn đi.",
+    body: "MBTI, RIASEC hoặc Big Five — chọn góc nhìn bạn muốn khám phá.",
   },
   {
     n: "02",
