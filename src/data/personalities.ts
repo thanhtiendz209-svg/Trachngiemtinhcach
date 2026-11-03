@@ -10,6 +10,7 @@ export const PERSONALITY_GROUPS: { id: PersonalityGroup | "all"; label: string }
   { id: "creative", label: "Nhóm sáng tạo" },
   { id: "social", label: "Nhóm xã hội" },
   { id: "organizer", label: "Nhóm tổ chức" },
+  { id: "origin", label: "Nhóm khởi nguồn" },
 ];
 
 export const PERSONALITIES: PersonalityType[] = [
