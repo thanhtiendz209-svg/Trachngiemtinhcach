@@ -8,7 +8,7 @@ const aliases = registerHooks({
     if (specifier.startsWith("@/")) {
       return nextResolve(new URL(`${specifier.slice(2)}.ts`, sourceRoot).href, context);
     }
-    if (specifier.startsWith(".") && context.parentURL?.startsWith(sourceRoot.href) && !/\\.[a-z]+$/i.test(specifier)) {
+    if (specifier.startsWith(".") && context.parentURL?.startsWith(sourceRoot.href) && !/\.[a-z]+$/i.test(specifier)) {
       return nextResolve(`${specifier}.ts`, context);
     }
     return nextResolve(specifier, context);
