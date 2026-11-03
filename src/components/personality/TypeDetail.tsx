@@ -25,7 +25,7 @@ export function TypeDetail({ type }: { type: PersonalityType }) {
                 src={type.image}
                 alt={`${type.id} ${type.name}`}
                 priority
-                className="aspect-square w-full object-cover"
+                className={isOrigin ? "aspect-[10/11] w-full object-contain" : "aspect-square w-full object-cover"}
               />
             </div>
           </Reveal>
