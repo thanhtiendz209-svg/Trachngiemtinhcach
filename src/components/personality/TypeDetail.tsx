@@ -4,12 +4,13 @@ import { TypeCard } from "@/components/personality/TypeCard";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { compatibleIds } from "@/data/compat";
-import { PERSONALITIES, getPersonality } from "@/data/personalities";
+import { ORIGIN_PERSONALITIES, PERSONALITIES, getPersonality } from "@/data/personalities";
 import type { PersonalityType } from "@/data/types";
 
 export function TypeDetail({ type }: { type: PersonalityType }) {
-  const related = PERSONALITIES.filter((p) => p.group === type.group && p.id !== type.id);
-  const compatible = compatibleIds(type.id)
+  const isOrigin = type.group === "origin";
+  const related = (isOrigin ? ORIGIN_PERSONALITIES : PERSONALITIES).filter((p) => p.group === type.group && p.id !== type.id);
+  const compatible = (isOrigin ? [] : compatibleIds(type.id))
     .map((id) => getPersonality(id))
     .filter((p): p is PersonalityType => Boolean(p));
 
@@ -46,8 +47,8 @@ export function TypeDetail({ type }: { type: PersonalityType }) {
             </Reveal>
             <Reveal delay={340} className="mt-6 no-print">
               <Button asChild>
-                <Link to="/trac-nghiem/$quizId" params={{ quizId: "mbti" }}>
-                  Làm trắc nghiệm MBTI
+                <Link to="/trac-nghiem/$quizId" params={{ quizId: isOrigin ? "riasec" : "mbti" }}>
+                  {isOrigin ? "Làm trắc nghiệm RIASEC" : "Làm trắc nghiệm MBTI"}
                 </Link>
               </Button>
             </Reveal>
@@ -169,7 +170,7 @@ export function TypeDetail({ type }: { type: PersonalityType }) {
           ))}
         </div>
         <Button asChild variant="ghost" className="mt-6 px-0">
-          <Link to="/nhom-tinh-cach">Đóng · Về lưới 16 nhóm</Link>
+          <Link to="/nhom-tinh-cach">Đóng · Về thư viện nhóm tính cách</Link>
         </Button>
       </section>
     </article>
