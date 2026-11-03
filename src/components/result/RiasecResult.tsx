@@ -84,7 +84,7 @@ export function RiasecResult({ riasec, showUniversity = true, careerProfile, pro
               return (
                 <Reveal key={letter} delay={i * 80}>
                   <article className="overflow-hidden rounded-[20px] bg-card shadow-border">
-                    {t?.image ? <img src={t.image} alt="" loading="lazy" decoding="async" className="aspect-[16/10] w-full object-cover" /> : null}
+                    {t?.image ? <img src={t.image} alt="" loading="lazy" decoding="async" className="aspect-[10/11] w-full bg-ice object-contain" /> : null}
                     <div className="p-5">
                       <p className="font-display text-2xl font-semibold text-azure">{letter}</p>
                       <h4 className="mt-1 font-semibold text-navy">{t?.name}</h4>
