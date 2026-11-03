@@ -4,7 +4,7 @@ import { getQuiz } from "@/data/quizzes";
 import { RIASEC_MAP } from "@/data/riasec";
 import { RIASEC_GROUP_MAX } from "@/data/riasec-questions";
 import type { Question, QuizResult } from "@/data/types";
-import { RIASEC_KEYS, riasecFromScores } from "./riasec";
+import { riasecFromScores } from "./riasec";
 import { pct } from "./utils";
 
 export function tally(questions: Question[], answers: number[]) {
@@ -36,18 +36,6 @@ export function mbtiFromScores(scores: Record<string, number>) {
   };
 }
 
-export function maxRiasecFromQuestions(questions: Question[], prefixed = false) {
-  const max: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-  for (const q of questions) {
-    for (const k of RIASEC_KEYS) {
-      const key = prefixed ? `r${k}` : k;
-      const m = Math.max(0, ...q.options.map((o) => o.scores[key] ?? 0));
-      max[k] += m;
-    }
-  }
-  return max;
-}
-
 export function scoreQuiz(quizId: string, answers: number[]): QuizResult | null {
   const quiz = getQuiz(quizId);
   const questions = questionsFor(quizId);
@@ -67,19 +55,10 @@ export function scoreQuiz(quizId: string, answers: number[]): QuizResult | null 
   if (quiz.kind === "riasec") {
     return { ...base, riasec: riasecFromScores(scores, false, RIASEC_GROUP_MAX) };
   }
-  if (quiz.kind === "interest") {
-    return { ...base, riasec: riasecFromScores(scores, false, maxRiasecFromQuestions(questions, false)) };
-  }
   if (quiz.kind === "bigfive") {
     return { ...base, bigfive: bigfiveFromScores(scores) };
   }
-  const m = mbtiFromScores(scores);
-  return {
-    ...base,
-    mbti: m.type,
-    axes: m.axes,
-    riasec: riasecFromScores(scores, true, maxRiasecFromQuestions(questions, true)),
-  };
+  return null;
 }
 
 export function bigfiveFromScores(scores: Record<string, number>) {
