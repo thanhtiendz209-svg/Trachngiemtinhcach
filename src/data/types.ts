@@ -22,7 +22,7 @@ export interface PersonalityType {
   note: string;
 }
 
-export type QuizKind = "mbti" | "riasec" | "bigfive" | "interest" | "combined";
+export type QuizKind = "mbti" | "riasec" | "bigfive";
 
 export interface QuizMeta {
   id: string;
@@ -32,7 +32,7 @@ export interface QuizMeta {
   description: string;
   duration: string;
   questionCount: number;
-  icon: "compass" | "layers" | "spark" | "heart" | "map";
+  icon: "compass" | "layers" | "spark";
   image: string;
 }
 
