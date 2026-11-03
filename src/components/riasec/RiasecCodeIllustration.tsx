@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-// Keep the six original RIASEC illustrations untouched.
-// A three-letter result reuses them in order: first large, next two small.
+// Each three-letter code uses the six original animated SVGs already on the site.
+// Keep the origin-group artwork untouched: only three-letter results use this component.
 const RIASEC_ART = {
   R: { label: "Thực tế", background: "#ffddc3" },
   I: { label: "Nghiên cứu", background: "#c5e5ff" },
@@ -18,8 +18,8 @@ function isRiasecArtKey(value: string): value is RiasecArtKey {
 }
 
 /**
- * Illustrates any of the 120 ordered RIASEC codes using just six existing SVGs.
- * Invalid or incomplete codes do not display a misleading illustration.
+ * RSC -> R, S, C from left to right. The first picture is larger;
+ * the two remaining pictures are smaller. Works for all 120 permutations.
  */
 export function RiasecCodeIllustration({
   code,
@@ -31,22 +31,18 @@ export function RiasecCodeIllustration({
   priority?: boolean;
 }) {
   const normalized = code.trim().toUpperCase();
-  const [primary, secondary, tertiary] = normalized.split("");
+  const letters = normalized.split("");
 
   if (
-    normalized.length !== 3 ||
-    !primary ||
-    !secondary ||
-    !tertiary ||
-    !isRiasecArtKey(primary) ||
-    !isRiasecArtKey(secondary) ||
-    !isRiasecArtKey(tertiary) ||
-    new Set([primary, secondary, tertiary]).size !== 3
+    letters.length !== 3 ||
+    letters.some((letter) => !isRiasecArtKey(letter)) ||
+    new Set(letters).size !== 3
   ) {
     return null;
   }
 
-  const accessibleLabel = `Minh họa mã ${normalized}: ${RIASEC_ART[primary].label} là nhóm chính; ${RIASEC_ART[secondary].label} và ${RIASEC_ART[tertiary].label} là hai nhóm phụ.`;
+  const keys = letters as RiasecArtKey[];
+  const accessibleLabel = `Minh họa mã RIASEC ${normalized}, từ trái qua phải: ${keys.map((key) => RIASEC_ART[key].label).join(", ")}. Nhóm đầu tiên có hình lớn hơn.`;
 
   return (
     <div
@@ -54,44 +50,28 @@ export function RiasecCodeIllustration({
       role="img"
       aria-label={accessibleLabel}
       className={cn(
-        "relative isolate aspect-square w-full overflow-hidden bg-gradient-to-br from-ice via-card to-mist",
+        "grid w-full grid-cols-[1.5fr_1fr_1fr] items-end gap-1.5 bg-gradient-to-br from-ice via-card to-mist p-2 sm:gap-3 sm:p-4",
         className,
       )}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-[16%] top-[4%] h-[66%] rounded-[32%] opacity-60"
-        style={{ backgroundColor: RIASEC_ART[primary].background }}
-      />
-      <img
-        src={`/riasec/animated/${primary}.svg`}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
-        decoding="async"
-        className="pointer-events-none absolute left-1/2 top-[2%] h-[70%] w-[72%] -translate-x-1/2 object-contain"
-      />
-      {([secondary, tertiary] as const).map((letter, index) => (
-        <span
-          key={letter}
+      {keys.map((key, index) => (
+        <div
+          key={index}
+          data-riasec-position={index + 1}
           aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute bottom-[4%] z-10 grid aspect-square w-[32%] place-items-center overflow-hidden rounded-full border-[3px] border-card shadow-lg",
-            index === 0 ? "left-[10%]" : "right-[10%]",
-          )}
-          style={{ backgroundColor: RIASEC_ART[letter].background }}
+          className="relative min-w-0 overflow-hidden rounded-xl"
+          style={{ backgroundColor: RIASEC_ART[key].background }}
         >
           <img
-            src={`/riasec/animated/${letter}.svg`}
+            src={`/riasec/animated/${key}.svg`}
             alt=""
             draggable={false}
             loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority && index === 0 ? "high" : "auto"}
             decoding="async"
-            className="h-[105%] w-[105%] object-cover object-top"
+            className="block aspect-[10/11] w-full object-contain p-1 sm:p-2"
           />
-        </span>
+        </div>
       ))}
     </div>
   );
