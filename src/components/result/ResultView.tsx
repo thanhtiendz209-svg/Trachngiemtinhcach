@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Copy, Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { TypeImage } from "@/components/art/TypePortrait";
+import { RiasecCodeIllustration } from "@/components/riasec/RiasecCodeIllustration";
 import { CAREER_ICONS } from "@/components/career/career-icons";
 import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,8 @@ export function ResultView({ result, profileContext = "result" }: { result: Quiz
             <div className="overflow-hidden rounded-[28px] shadow-border-hover">
               {person ? (
                 <TypeImage id={person.id} src={person.image} alt={heroAlt} priority className={topHolland ? "aspect-[10/11] w-full bg-ice object-contain" : "aspect-square w-full object-cover"} />
+              ) : result.riasec ? (
+                <RiasecCodeIllustration code={result.riasec.code} priority />
               ) : heroImg ? (
                 <img src={heroImg} alt={heroAlt} fetchPriority="high" decoding="async" className="aspect-square w-full object-cover" />
               ) : (
