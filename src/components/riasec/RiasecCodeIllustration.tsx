@@ -18,8 +18,8 @@ function isRiasecArtKey(value: string): value is RiasecArtKey {
 }
 
 /**
- * RSC -> R, S, C from left to right. The first picture is larger;
- * the two remaining pictures are smaller. Works for all 120 permutations.
+ * RSC -> S (left), R (large center), C (right).
+ * The first code letter stays dominant. Works for all 120 permutations.
  */
 export function RiasecCodeIllustration({
   code,
@@ -42,7 +42,10 @@ export function RiasecCodeIllustration({
   }
 
   const keys = letters as RiasecArtKey[];
-  const accessibleLabel = `Minh họa mã RIASEC ${normalized}, từ trái qua phải: ${keys.map((key) => RIASEC_ART[key].label).join(", ")}. Nhóm đầu tiên có hình lớn hơn.`;
+  const accessibleLabel = `Minh họa mã RIASEC ${normalized}: ${RIASEC_ART[keys[0]].label} là hình lớn ở giữa; ${RIASEC_ART[keys[1]].label} ở bên trái và ${RIASEC_ART[keys[2]].label} ở bên phải.`;
+
+  // Visual order: second letter, first letter (largest), third letter.
+  const displayed = [keys[1], keys[0], keys[2]] as const;
 
   return (
     <div
@@ -50,14 +53,14 @@ export function RiasecCodeIllustration({
       role="img"
       aria-label={accessibleLabel}
       className={cn(
-        "grid w-full grid-cols-[1.5fr_1fr_1fr] items-end gap-1.5 bg-gradient-to-br from-ice via-card to-mist p-2 sm:gap-3 sm:p-4",
+        "grid w-full grid-cols-[1fr_1.5fr_1fr] items-end gap-1.5 bg-gradient-to-br from-ice via-card to-mist p-2 sm:gap-3 sm:p-4",
         className,
       )}
     >
-      {keys.map((key, index) => (
+      {displayed.map((key, index) => (
         <div
           key={index}
-          data-riasec-position={index + 1}
+          data-riasec-position={index === 1 ? 1 : index === 0 ? 2 : 3}
           aria-hidden="true"
           className="relative min-w-0 overflow-hidden rounded-xl"
           style={{ backgroundColor: RIASEC_ART[key].background }}
