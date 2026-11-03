@@ -70,7 +70,7 @@ export function RiasecCodeIllustration({
             alt=""
             draggable={false}
             loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority && index === 0 ? "high" : "auto"}
+            fetchPriority={priority && index === 1 ? "high" : "auto"}
             decoding="async"
             className="block aspect-[10/11] w-full object-contain p-1 sm:p-2"
           />
