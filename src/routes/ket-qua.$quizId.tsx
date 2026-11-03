@@ -4,6 +4,7 @@ import { SiteShell } from "@/components/layout/SiteShell";
 import { ResultView } from "@/components/result/ResultView";
 import { Button } from "@/components/ui/button";
 import type { QuizResult } from "@/data/types";
+import { getQuiz } from "@/data/quizzes";
 import { loadResult } from "@/lib/storage";
 
 export const Route = createFileRoute("/ket-qua/$quizId")({
@@ -15,7 +16,7 @@ function ResultRoute() {
   const [result, setResult] = useState<QuizResult | null | undefined>(undefined);
 
   useEffect(() => {
-    setResult(loadResult(quizId));
+    setResult(getQuiz(quizId) ? loadResult(quizId) : null);
   }, [quizId]);
 
   if (result === undefined) {
@@ -35,8 +36,8 @@ function ResultRoute() {
           <h1 className="font-display text-2xl font-semibold text-navy">Chưa có kết quả</h1>
           <p className="mt-2 text-muted">Hãy hoàn thành bài test để xem hồ sơ.</p>
           <Button asChild className="mt-6">
-            <Link to="/trac-nghiem/$quizId" params={{ quizId }}>
-              Làm trắc nghiệm
+            <Link to="/trac-nghiem">
+              Chọn bài trắc nghiệm
             </Link>
           </Button>
         </div>
