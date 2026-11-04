@@ -129,7 +129,12 @@ export interface RiasecCombination {
   improvements: string[];
   careers: string[];
   advice: string;
-  source: "batch" | "fallback";
+  source: "batch" | "document" | "fallback";
+  sourceDocument?: string;
+  facets?: Array<{ letter: string; description: string; strength: string; caution: string }>;
+  strengthsIntroduction?: string;
+  careersIntroduction?: string;
+  careersNote?: string;
 }
 
 export type UniversityLocation = "Hà Nội" | "TP.HCM" | "Đà Nẵng" | "Khác";

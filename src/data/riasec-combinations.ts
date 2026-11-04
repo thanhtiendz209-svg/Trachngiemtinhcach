@@ -1,9 +1,66 @@
 import type { RiasecCombination } from "./types";
 
-/** 119 of 120 distinct 3-letter RIASEC permutations from the Batch Word files.
- *  RIA is absent from the source documents — callers must use the fallback helper.
+/** All 120 ordered, distinct 3-letter RIASEC profiles.
+ *  The original 119 Batch Word records are unchanged. RIA comes from the user-provided
+ *  “CÂU NÓI CHO MỖI TỔ HỢP.docx”, attributed separately from the Batch files.
  */
 export const RIASEC_COMBINATIONS: RiasecCombination[] = [
+  {
+    "code": "RIA",
+    "title": "Người khám phá, thực hành và sáng tạo",
+    "quote": "Hiểu vấn đề → tìm giải pháp → tự tay tạo ra và cải tiến.",
+    "overview": "Người có mã RIA nổi bật ở sự kết hợp giữa tính thực tế (R), tư duy khám phá – phân tích (I) và khả năng sáng tạo (A). Bạn thường không chỉ muốn biết một vấn đề hoạt động như thế nào, mà còn muốn tự mình thử nghiệm, tìm cách giải quyết và tạo ra một cách làm riêng.\n\nBạn có xu hướng thích những công việc có kết quả cụ thể, nhưng đồng thời cần đủ tự do để suy nghĩ và cải tiến. Bạn có thể không thật sự phù hợp với công việc quá lặp lại, chỉ làm theo quy trình mà không có cơ hội tìm tòi.",
+    "facets": [
+      {
+        "letter": "R",
+        "description": "R cao cho thấy bạn có xu hướng học thông qua trải nghiệm và hành động. Bạn thường dễ hứng thú khi được trực tiếp làm, thử nghiệm, sử dụng công cụ hoặc tạo ra một sản phẩm cụ thể.",
+        "strength": "Bạn thực tế, kiên trì, khéo léo khi xử lý vấn đề cụ thể, có khả năng biến kiến thức thành hành động.",
+        "caution": "Bạn có thể không hứng thú với những nội dung quá trừu tượng hoặc công việc chỉ ngồi lý thuyết trong thời gian dài."
+      },
+      {
+        "letter": "I",
+        "description": "I cao cho thấy bạn có tính tò mò và xu hướng muốn hiểu bản chất vấn đề. Khi gặp một điều chưa biết, bạn có thể muốn tìm nguyên nhân, phân tích thông tin và thử những cách khác nhau để tìm ra lời giải.",
+        "strength": "tư duy logic, phân tích, học hỏi, giải quyết vấn đề và khả năng đào sâu kiến thức.",
+        "caution": "đôi khi có thể suy nghĩ quá lâu hoặc quá tập trung vào việc tìm lời giải mà chậm chuyển sang hành động."
+      },
+      {
+        "letter": "A",
+        "description": "A cao bổ sung cho R và I khả năng tạo ra cách tiếp cận mới. Bạn không nhất thiết muốn mọi thứ phải có một khuôn mẫu duy nhất và có thể thích tự do lựa chọn cách thể hiện hoặc cải tiến sản phẩm.",
+        "strength": "sáng tạo, linh hoạt, có khả năng nhìn vấn đề từ nhiều góc độ và tạo ra ý tưởng mới.",
+        "caution": "có thể dễ mất hứng thú khi công việc quá cứng nhắc; cần rèn tính kỷ luật để biến ý tưởng thành sản phẩm hoàn chỉnh."
+      }
+    ],
+    "strengthsIntroduction": "Sự kết hợp R + I + A tạo nên một kiểu tư duy khá đặc trưng:\n\nBạn có thể có lợi thế ở:",
+    "strengths": [
+      "Khả năng kết hợp lý thuyết với thực hành.",
+      "Tư duy giải quyết vấn đề thay vì chỉ ghi nhớ.",
+      "Khả năng tìm ra cách làm mới và cải tiến sản phẩm.",
+      "Thích nghi tốt với những nhiệm vụ cần vừa suy nghĩ vừa thực hiện.",
+      "Có khả năng phát triển mạnh khi được làm dự án hoặc sản phẩm thực tế."
+    ],
+    "improvements": [
+      "Rèn tính kiên trì và khả năng hoàn thành thay vì chỉ bắt đầu nhiều ý tưởng.",
+      "Học cách trình bày ý tưởng rõ ràng cho người khác.",
+      "Phát triển kỹ năng làm việc nhóm và giao tiếp.",
+      "Không nên quá phụ thuộc vào cảm hứng hoặc sở thích nhất thời.",
+      "Khi chọn ngành, cần kiểm tra cả năng lực học tập thực tế, đặc biệt với các ngành kỹ thuật hoặc công nghệ."
+    ],
+    "careersIntroduction": "RIA thường phù hợp để tìm hiểu những lĩnh vực nằm giữa kỹ thuật – nghiên cứu – sáng tạo, chẳng hạn:",
+    "careers": [
+      "Kỹ thuật cơ khí",
+      "Cơ điện tử",
+      "Tự động hóa",
+      "Công nghệ kỹ thuật",
+      "Kiến trúc",
+      "Thiết kế công nghiệp",
+      "Thiết kế sản phẩm",
+      "Công nghệ và kỹ thuật máy tính"
+    ],
+    "careersNote": "Tuy nhiên, không nên hiểu rằng có mã RIA thì bắt buộc phải chọn các ngành trên. RIA chỉ cho biết môi trường và kiểu công việc có khả năng phù hợp với sở thích của bạn; năng lực môn học, điều kiện học tập và mục tiêu cá nhân vẫn cần được xem xét.",
+    "advice": "Hãy phát huy sự tò mò, tư duy phân tích và khả năng học hỏi qua thực hành của bạn. Đừng ngại thử nghiệm và tìm cách tạo ra những giải pháp mới, nhưng hãy chú ý rèn luyện tính kiên trì, khả năng hoàn thành công việc và kỹ năng phối hợp với người khác. Khi chọn nghề, hãy tìm môi trường cho phép bạn được khám phá, thực hành, sáng tạo và cải tiến, thay vì chỉ dựa vào một kết quả trắc nghiệm để quyết định tương lai.",
+    "source": "document",
+    "sourceDocument": "CÂU NÓI CHO MỖI TỔ HỢP.docx"
+  },
   {
     "code": "RIS",
     "title": "Người thực hành, phân tích và đồng hành",

@@ -97,6 +97,57 @@ jobs:
           SITE_ADMISSIONS_2026: '1'
           SITE_REVISION: production-${{ github.sha }}
         run: node scripts/site-regression.mjs https://trachnghiemtinhcach.vercel.app/ 2>&1 | tee screenshots/site-regression.log
+      - name: Wait for the RIASEC profile feature on the public deployment
+        if: ${{ hashFiles('scripts/riasec-profiles-regression.mjs') != '' }}
+        working-directory: /workspace
+        timeout-minutes: 4
+        run: |
+          node --input-type=module <<'JS' 2>&1 | tee screenshots/production-riasec-profiles-readiness.log
+          import { writeFileSync } from 'node:fs';
+          import { setTimeout as pause } from 'node:timers/promises';
+
+          const url = 'https://trachnghiemtinhcach.vercel.app/nhom-tinh-cach/riasec/RIA';
+          const deadline = Date.now() + 3 * 60 * 1000;
+          const evidence = { ok: false, url, revision: process.env.GITHUB_SHA, attempts: [] };
+          try {
+            while (Date.now() < deadline) {
+              const attempt = { checkedAt: new Date().toISOString() };
+              try {
+                const response = await fetch(url, {
+                  signal: AbortSignal.timeout(10000),
+                  headers: { 'Cache-Control': 'no-cache' },
+                  cache: 'no-store',
+                });
+                attempt.status = response.status;
+                attempt.vercelId = response.headers.get('x-vercel-id');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const html = await response.text();
+                attempt.profileMarker = /data-riasec-profile-detail=(["'])RIA\1/.test(html);
+                if (!attempt.profileMarker) throw new Error('The live RIA profile route does not yet contain the feature marker');
+                evidence.ok = true;
+                evidence.attempts.push(attempt);
+                console.log(`Production RIASEC profile feature is ready after ${evidence.attempts.length} attempt(s)`);
+                break;
+              } catch (error) {
+                attempt.error = String(error.message || error);
+                evidence.attempts.push(attempt);
+                console.log(`${attempt.checkedAt}: ${attempt.error}`);
+              }
+              const remaining = deadline - Date.now();
+              if (remaining > 0) await pause(Math.min(10000, remaining));
+            }
+            if (!evidence.ok) throw new Error('The production RIASEC profile feature did not appear within three minutes');
+          } finally {
+            writeFileSync('screenshots/production-riasec-profiles-readiness.json', JSON.stringify(evidence, null, 2));
+          }
+          JS
+      - name: Exercise the live RIASEC profile library and details
+        if: ${{ hashFiles('scripts/riasec-profiles-regression.mjs') != '' }}
+        working-directory: /workspace
+        env:
+          BROWSER_ALLOW_EXTERNAL_HOST: '1'
+          SITE_REVISION: production-${{ github.sha }}
+        run: node scripts/riasec-profiles-regression.mjs https://trachnghiemtinhcach.vercel.app/ 2>&1 | tee screenshots/riasec-profiles-regression.log
       - name: Preserve live browser screenshots and verification evidence
         if: always()
         uses: actions/upload-artifact@v4

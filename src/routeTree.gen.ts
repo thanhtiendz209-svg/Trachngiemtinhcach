@@ -24,6 +24,7 @@ import { Route as TracNghiemIndexRouteImport } from './routes/trac-nghiem.index'
 import { Route as TracNghiemQuizIdRouteImport } from './routes/trac-nghiem.$quizId'
 import { Route as TruongDaiHocIndexRouteImport } from './routes/truong-dai-hoc.index'
 import { Route as TruongDaiHocUniversityIdRouteImport } from './routes/truong-dai-hoc.$universityId'
+import { Route as NhomTinhCachRiasecCodeRouteImport } from './routes/nhom-tinh-cach.riasec.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -101,6 +102,11 @@ const TruongDaiHocUniversityIdRoute =
     path: '/truong-dai-hoc/$universityId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const NhomTinhCachRiasecCodeRoute = NhomTinhCachRiasecCodeRouteImport.update({
+  id: '/riasec/$code',
+  path: '/riasec/$code',
+  getParentRoute: () => NhomTinhCachRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/nhom-tinh-cach/': typeof NhomTinhCachIndexRoute
   '/trac-nghiem/': typeof TracNghiemIndexRoute
   '/truong-dai-hoc/': typeof TruongDaiHocIndexRoute
+  '/nhom-tinh-cach/riasec/$code': typeof NhomTinhCachRiasecCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/nhom-tinh-cach': typeof NhomTinhCachIndexRoute
   '/trac-nghiem': typeof TracNghiemIndexRoute
   '/truong-dai-hoc': typeof TruongDaiHocIndexRoute
+  '/nhom-tinh-cach/riasec/$code': typeof NhomTinhCachRiasecCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/nhom-tinh-cach/': typeof NhomTinhCachIndexRoute
   '/trac-nghiem/': typeof TracNghiemIndexRoute
   '/truong-dai-hoc/': typeof TruongDaiHocIndexRoute
+  '/nhom-tinh-cach/riasec/$code': typeof NhomTinhCachRiasecCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/nhom-tinh-cach/'
     | '/trac-nghiem/'
     | '/truong-dai-hoc/'
+    | '/nhom-tinh-cach/riasec/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/nhom-tinh-cach'
     | '/trac-nghiem'
     | '/truong-dai-hoc'
+    | '/nhom-tinh-cach/riasec/$code'
   id:
     | '__root__'
     | '/'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/nhom-tinh-cach/'
     | '/trac-nghiem/'
     | '/truong-dai-hoc/'
+    | '/nhom-tinh-cach/riasec/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -321,6 +333,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TruongDaiHocUniversityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nhom-tinh-cach/riasec/$code': {
+      id: '/nhom-tinh-cach/riasec/$code'
+      path: '/riasec/$code'
+      fullPath: '/nhom-tinh-cach/riasec/$code'
+      preLoaderRoute: typeof NhomTinhCachRiasecCodeRouteImport
+      parentRoute: typeof NhomTinhCachRoute
+    }
   }
 }
 
@@ -341,11 +360,13 @@ const HuongNghiepRouteWithChildren = HuongNghiepRoute._addFileChildren(
 interface NhomTinhCachRouteChildren {
   NhomTinhCachTypeIdRoute: typeof NhomTinhCachTypeIdRoute
   NhomTinhCachIndexRoute: typeof NhomTinhCachIndexRoute
+  NhomTinhCachRiasecCodeRoute: typeof NhomTinhCachRiasecCodeRoute
 }
 
 const NhomTinhCachRouteChildren: NhomTinhCachRouteChildren = {
   NhomTinhCachTypeIdRoute: NhomTinhCachTypeIdRoute,
   NhomTinhCachIndexRoute: NhomTinhCachIndexRoute,
+  NhomTinhCachRiasecCodeRoute: NhomTinhCachRiasecCodeRoute,
 }
 
 const NhomTinhCachRouteWithChildren = NhomTinhCachRoute._addFileChildren(

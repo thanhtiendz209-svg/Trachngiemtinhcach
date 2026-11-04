@@ -20,7 +20,7 @@ const { RIASEC_TYPES } = await import("../data/riasec.ts");
 aliases.deregister();
 
 describe("RIASEC origin personality groups", () => {
-  it("keeps Tất cả limited to the original 16 MBTI profiles", () => {
+  it("keeps the MBTI category limited to the original 16 profiles", () => {
     assert.equal(PERSONALITIES.length, 16);
     assert.ok(PERSONALITIES.every((type) => type.id.length === 4 && type.group !== "origin"));
   });
@@ -28,7 +28,7 @@ describe("RIASEC origin personality groups", () => {
   it("exposes all six source RIASEC groups only in the dedicated origin category", () => {
     assert.equal(ORIGIN_PERSONALITIES.length, 6);
     assert.deepEqual(ORIGIN_PERSONALITIES.map((item) => item.id), ["R", "I", "A", "S", "E", "C"]);
-    assert.ok(PERSONALITY_GROUPS.some((item) => item.id === "origin" && item.label === "Nhóm khởi nguồn"));
+    assert.ok(PERSONALITY_GROUPS.some((item) => item.id === "origin" && item.label === "Nhóm RIASEC"));
     assert.ok(ORIGIN_PERSONALITIES.every((item) => item.group === "origin"));
     assert.ok(ORIGIN_PERSONALITIES.every((item) => getPersonality(item.id)?.id === item.id));
     assert.ok(ORIGIN_PERSONALITIES.every((item) => !PERSONALITIES.some((p) => p.id === item.id)));

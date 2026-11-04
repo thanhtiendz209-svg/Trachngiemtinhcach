@@ -40,6 +40,11 @@ export function RiasecResult({ riasec, showUniversity = true, careerProfile, pro
               Nội dung tổ hợp {riasec.code} chưa có trong tài liệu Batch — đang dùng fallback từ ba nhóm thành phần.
             </p>
           ) : null}
+          {combo.source !== "fallback" ? (
+            <Button asChild variant="secondary" className="mt-4">
+              <Link to="/nhom-tinh-cach/riasec/$code" params={{ code: combo.code }}>Xem hồ sơ {combo.code}</Link>
+            </Button>
+          ) : null}
         </Reveal>
 
         <div className="mt-8">
