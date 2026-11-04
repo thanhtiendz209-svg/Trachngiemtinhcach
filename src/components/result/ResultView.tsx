@@ -71,7 +71,7 @@ export function ResultView({ result, profileContext = "result" }: { result: Quiz
           <Reveal>
             <div className="overflow-hidden rounded-[28px] shadow-border-hover">
               {person ? (
-                <TypeImage id={person.id} src={person.image} alt={heroAlt} priority className={topHolland ? "aspect-[10/11] w-full bg-ice object-contain" : "aspect-square w-full object-cover"} />
+                <TypeImage id={person.id} src={person.image} alt={heroAlt} priority className="aspect-[10/11] w-full bg-ice object-contain" />
               ) : result.riasec ? (
                 <RiasecCodeIllustration code={result.riasec.code} priority />
               ) : heroImg ? (

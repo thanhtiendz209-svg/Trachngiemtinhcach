@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440" width="400" height="440" role="img" aria-label="ISFJ - Người hỗ trợ">
+<title>ISFJ – Người hỗ trợ</title>
+<style>
+.bob{animation:bob 2s ease-in-out infinite}
+.wig{transform-box:fill-box;transform-origin:50% 100%;animation:wig 1.3s ease-in-out infinite}
+.flt{animation:flt 3s ease-in-out infinite}
+.flt2{animation:flt 3.4s ease-in-out infinite reverse}
+.spin{transform-box:fill-box;transform-origin:50% 50%;animation:spin 9s linear infinite}
+.eyes{transform-box:fill-box;transform-origin:50% 50%;animation:blink 4s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes wig{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+</style>
+<defs><filter id="sketch" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="n"><animate attributeName="seed" values="3;7;11;5" dur="0.9s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/></filter></defs>
+<g filter="url(#sketch)" stroke-linecap="round" stroke-linejoin="round">
+<path d="M60 150 Q40 60 150 40 Q290 14 355 100 Q405 190 350 290 Q290 385 170 372 Q50 360 60 250z" fill="#e2eefb" stroke="#3b2f2f" stroke-width="4"/>
+<g class="flt"><g transform="translate(-9.200000000000003 -12.799999999999997) scale(1.2)"><path d="M72 112 C48 98 50 76 68 76 C76 76 80 82 79 85 C82 78 100 76 104 90 C108 104 88 108 72 112z" fill="#ff6b81" stroke="#3b2f2f" stroke-width="3.3333333333333335" stroke-linejoin="round" stroke-linecap="round" /></g></g><g class="flt2"><path d="M318 112 v-26 h60 v26z" fill="#fff" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" /><path d="M310 88 l38 -32 l38 32z" fill="#e5533d" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" /><rect x="340" y="94" width="16" height="18" rx="3" fill="#a9723d" stroke="#3b2f2f" stroke-width="3" /></g>
+<ellipse cx="200" cy="362" rx="80" ry="12" fill="#3b2f2f" fill-opacity=".15"/>
+<g class="bob">
+
+<ellipse cx="178" cy="356" rx="20" ry="9" fill="#6b4226" stroke="#3b2f2f" stroke-width="4"/><ellipse cx="222" cy="356" rx="20" ry="9" fill="#6b4226" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M150 242 Q200 218 250 242 L262 346 Q200 362 138 346z" fill="#5b9bd5" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round"/>
+
+<path d="M158 252 Q122 280 130 318" fill="none" stroke="#3b2f2f" stroke-width="22" stroke-linecap="round"/><path d="M158 252 Q122 280 130 318" fill="none" stroke="#ffd9b8" stroke-width="16" stroke-linecap="round"/>
+<circle cx="130" cy="320" r="11" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M242 252 Q274 268 280 296" fill="none" stroke="#3b2f2f" stroke-width="22" stroke-linecap="round"/><path d="M242 252 Q274 268 280 296" fill="none" stroke="#ffd9b8" stroke-width="16" stroke-linecap="round"/>
+<circle cx="200" cy="170" r="50" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M151 170 Q146 108 200 108 Q254 108 249 170 Q232 134 200 138 Q168 134 151 170z" fill="#6b4226" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round"/>
+<g class="eyes"><circle cx="182" cy="174" r="4.5" fill="#3b2f2f"/><circle cx="218" cy="174" r="4.5" fill="#3b2f2f"/></g>
+<ellipse cx="166" cy="190" rx="9" ry="5.5" fill="#ff9aa9" fill-opacity=".6"/><ellipse cx="234" cy="190" rx="9" ry="5.5" fill="#ff9aa9" fill-opacity=".6"/>
+<path d="M186 192 Q200 207 214 192" fill="none" stroke="#3b2f2f" stroke-width="4"/>
+
+
+<g class="wig"><path d="M280 260 v-12 h26 v12" fill="none" stroke="#3b2f2f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="262" y="258" width="62" height="46" rx="6" fill="#fff" stroke="#3b2f2f" stroke-width="4" /><path d="M288 268 h12 v10 h10 v12 h-10 v10 h-12 v-10 h-10 v-12 h10z" fill="#e5533d" stroke="#3b2f2f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" /></g>
+<circle cx="280" cy="298" r="11" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+</g>
+<rect x="296" y="334" width="88" height="36" rx="18" fill="#5b9bd5" stroke="#3b2f2f" stroke-width="4"/>
+<text x="340" y="360" font-size="22" font-weight="700" text-anchor="middle" fill="#fff" font-family="'Segoe Print','Comic Sans MS',cursive">ISFJ</text>
+<text x="190" y="415" font-size="30" font-weight="700" text-anchor="middle" fill="#3b2f2f" font-family="'Segoe Print','Comic Sans MS',cursive">Người hỗ trợ</text>
+</g></svg>

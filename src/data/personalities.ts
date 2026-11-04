@@ -2,7 +2,7 @@ import type { PersonalityGroup, PersonalityType } from "./types";
 import { RIASEC_TYPES } from "./riasec";
 
 function img(id: string) {
-  return `/personality/${id}.webp`;
+  return `/personality/MBTI_${id}_animated.svg`;
 }
 
 export const PERSONALITY_GROUPS: { id: PersonalityGroup | "all"; label: string }[] = [

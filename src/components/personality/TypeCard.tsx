@@ -8,7 +8,7 @@ export function TypeCard({ type }: { type: PersonalityType }) {
     <article className="group flex h-full flex-col overflow-hidden rounded-[24px] bg-card shadow-border transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-border-hover">
       <div className="relative aspect-[5/4] overflow-hidden bg-ice">
         <div className="h-full w-full transition-transform duration-300 ease-out group-hover:scale-[1.04]">
-          <TypeImage id={type.id} src={type.image} alt={`${type.id} — ${type.name}`} className={type.group === "origin" ? "object-contain" : undefined} />
+          <TypeImage id={type.id} src={type.image} alt={`${type.id} — ${type.name}`} className="object-contain" />
         </div>
         <span className="absolute left-3 top-3 rounded-full bg-card/95 px-2.5 py-1 font-display text-xs font-semibold tracking-wide text-navy shadow-border">
           {type.id}

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440" width="400" height="440" role="img" aria-label="ENFP - Người truyền cảm hứng">
+<title>ENFP – Người truyền cảm hứng</title>
+<style>
+.bob{animation:bob 2s ease-in-out infinite}
+.wig{transform-box:fill-box;transform-origin:50% 100%;animation:wig 1.3s ease-in-out infinite}
+.flt{animation:flt 3s ease-in-out infinite}
+.flt2{animation:flt 3.4s ease-in-out infinite reverse}
+.spin{transform-box:fill-box;transform-origin:50% 50%;animation:spin 9s linear infinite}
+.eyes{transform-box:fill-box;transform-origin:50% 50%;animation:blink 4s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes wig{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+</style>
+<defs><filter id="sketch" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="n"><animate attributeName="seed" values="3;7;11;5" dur="0.9s" repeatCount="indefinite" calcMode="discrete"/></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/></filter></defs>
+<g filter="url(#sketch)" stroke-linecap="round" stroke-linejoin="round">
+<path d="M60 150 Q40 60 150 40 Q290 14 355 100 Q405 190 350 290 Q290 385 170 372 Q50 360 60 250z" fill="#eaf6d5" stroke="#3b2f2f" stroke-width="4"/>
+<g class="spin"><path d="M80 80 L84.8 91.2 L96 96 L84.8 100.8 L80 112 L75.2 100.8 L64 96 L75.2 91.2z" fill="#ff6b81" stroke="#3b2f2f" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" /></g><g class="flt"><rect x="330" y="84" width="14" height="8" rx="2" fill="#4fc3f7" stroke="#3b2f2f" stroke-width="3" transform="rotate(25 337 88)"/><rect x="356" y="106" width="14" height="8" rx="2" fill="#ff6b81" stroke="#3b2f2f" stroke-width="3" transform="rotate(-30 363 110)"/><rect x="322" y="116" width="14" height="8" rx="2" fill="#ffd23f" stroke="#3b2f2f" stroke-width="3" transform="rotate(60 329 120)"/></g>
+<ellipse cx="200" cy="362" rx="80" ry="12" fill="#3b2f2f" fill-opacity=".15"/>
+<g class="bob">
+
+<ellipse cx="178" cy="356" rx="20" ry="9" fill="#6b4226" stroke="#3b2f2f" stroke-width="4"/><ellipse cx="222" cy="356" rx="20" ry="9" fill="#6b4226" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M150 242 Q200 218 250 242 L262 346 Q200 362 138 346z" fill="#8bc34a" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round"/>
+
+<path d="M158 252 Q122 280 130 318" fill="none" stroke="#3b2f2f" stroke-width="22" stroke-linecap="round"/><path d="M158 252 Q122 280 130 318" fill="none" stroke="#ffd9b8" stroke-width="16" stroke-linecap="round"/>
+<circle cx="130" cy="320" r="11" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M242 252 Q274 268 280 296" fill="none" stroke="#3b2f2f" stroke-width="22" stroke-linecap="round"/><path d="M242 252 Q274 268 280 296" fill="none" stroke="#ffd9b8" stroke-width="16" stroke-linecap="round"/>
+<circle cx="200" cy="170" r="50" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+<path d="M151 170 Q146 108 200 108 Q254 108 249 170 Q232 134 200 138 Q168 134 151 170z" fill="#a0522d" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round"/>
+<g class="eyes"><circle cx="182" cy="174" r="4.5" fill="#3b2f2f"/><circle cx="218" cy="174" r="4.5" fill="#3b2f2f"/></g>
+<ellipse cx="166" cy="190" rx="9" ry="5.5" fill="#ff9aa9" fill-opacity=".6"/><ellipse cx="234" cy="190" rx="9" ry="5.5" fill="#ff9aa9" fill-opacity=".6"/>
+<path d="M186 192 Q200 207 214 192" fill="none" stroke="#3b2f2f" stroke-width="4"/>
+
+<path d="M170 126 L200 62 L230 126z" fill="#ff6b81" stroke="#3b2f2f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" /><path d="M182 100 l36 0 M190 82 l20 0" fill="none" stroke="#3b2f2f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="200" cy="60" r="8" fill="#ffd23f" stroke="#3b2f2f" stroke-width="3"/>
+<g class="wig"><path d="M280 298 L268 250 M280 298 L292 246 M280 298 L316 258" stroke="#3b2f2f" stroke-width="3" fill="none"/><ellipse cx="266" cy="232" rx="17" ry="21" fill="#ff6b81" stroke="#3b2f2f" stroke-width="4"/><ellipse cx="292" cy="222" rx="17" ry="21" fill="#4fc3f7" stroke="#3b2f2f" stroke-width="4"/><ellipse cx="320" cy="238" rx="17" ry="21" fill="#ffd23f" stroke="#3b2f2f" stroke-width="4"/></g>
+<circle cx="280" cy="298" r="11" fill="#ffd9b8" stroke="#3b2f2f" stroke-width="4"/>
+</g>
+<rect x="296" y="334" width="88" height="36" rx="18" fill="#8bc34a" stroke="#3b2f2f" stroke-width="4"/>
+<text x="340" y="360" font-size="22" font-weight="700" text-anchor="middle" fill="#fff" font-family="'Segoe Print','Comic Sans MS',cursive">ENFP</text>
+<text x="190" y="415" font-size="24" font-weight="700" text-anchor="middle" fill="#3b2f2f" font-family="'Segoe Print','Comic Sans MS',cursive">Người truyền cảm hứng</text>
+</g></svg>
