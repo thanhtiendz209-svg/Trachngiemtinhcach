@@ -818,11 +818,11 @@ try {
     });
   }
 
-  await check("merged profile preserves all five results", async () => {
+  await check("merged profile preserves all three current quiz results", async () => {
     await navigate(page, `${origin}/ho-so`);
     await visible(page.getByRole("heading", { name: "Hồ sơ hướng nghiệp của bạn", exact: true }));
     await visible(page.getByText("Đã có kết quả", { exact: true }));
-    assert.equal(await page.getByText("Đã có kết quả", { exact: true }).count(), 5);
+    assert.equal(await page.getByText("Đã có kết quả", { exact: true }).count(), 3);
   });
 
   await check("mobile navigation, university search and reduced motion render", async () => {

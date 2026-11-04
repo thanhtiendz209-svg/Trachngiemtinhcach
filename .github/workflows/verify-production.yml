@@ -35,6 +35,7 @@ jobs:
           rm -rf screenshots
           mkdir -p screenshots
       - name: Install dependencies and browser
+        timeout-minutes: 8
         working-directory: /workspace
         run: |
           npm ci 2>&1 | tee screenshots/install.log
@@ -88,7 +89,7 @@ jobs:
             writeFileSync('screenshots/production-readiness.json', JSON.stringify(evidence, null, 2));
           }
           JS
-      - name: Exercise live school, career and all five quiz flows
+      - name: Exercise live school, career and all three quiz flows
         working-directory: /workspace
         env:
           BROWSER_ALLOW_EXTERNAL_HOST: '1'

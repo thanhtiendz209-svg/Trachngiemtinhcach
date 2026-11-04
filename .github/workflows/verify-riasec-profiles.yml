@@ -33,6 +33,7 @@ jobs:
           git fetch --no-tags --depth=1 origin 1820dd022efe6aa96930895f6722c69524d420d6
           git show 1820dd022efe6aa96930895f6722c69524d420d6:src/data/universities.ts >screenshots/baseline-universities.ts
       - name: Install dependencies and browser
+        timeout-minutes: 8
         working-directory: /workspace
         run: |
           npm ci 2>&1 | tee screenshots/install.log
