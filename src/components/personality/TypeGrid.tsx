@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 import { TypeCard } from "./TypeCard";
 
 export function TypeGrid() {
-  const [filter, setFilter] = useState<(typeof PERSONALITY_GROUPS)[number]["id"]>("all");
+  const [filter, setFilter] = useState<(typeof PERSONALITY_GROUPS)[number]["id"]>("mbti");
   const list = useMemo(
-    () => (filter === "all" ? PERSONALITIES : filter === "origin" ? ORIGIN_PERSONALITIES : PERSONALITIES.filter((p) => p.group === filter)),
+    () => (filter === "mbti" ? PERSONALITIES : ORIGIN_PERSONALITIES),
     [filter],
   );
 
@@ -17,7 +17,7 @@ export function TypeGrid() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-azure">16 nhóm MBTI · 6 nhóm RIASEC</p>
         <h2 className="mt-2 font-display text-3xl font-semibold text-navy">Khám phá các nhóm tính cách</h2>
         <p className="mt-3 max-w-2xl text-muted">
-          “Tất cả” hiển thị 16 nhóm MBTI. Chọn “Nhóm khởi nguồn” để khám phá riêng 6 nhóm RIASEC.
+          Chọn “Nhóm MBTI” để khám phá 16 nhóm tính cách MBTI hoặc “Nhóm RIASEC” để xem 6 nhóm tính cách RIASEC.
         </p>
       </Reveal>
       <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Lọc nhóm">

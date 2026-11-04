@@ -1,18 +1,14 @@
-import type { PersonalityGroup, PersonalityType } from "./types";
+import type { PersonalityType } from "./types";
 import { RIASEC_TYPES } from "./riasec";
 
 function img(id: string) {
   return `/personality/MBTI_${id}_animated.svg`;
 }
 
-export const PERSONALITY_GROUPS: { id: PersonalityGroup | "all"; label: string }[] = [
-  { id: "all", label: "Tất cả" },
-  { id: "analyst", label: "Nhóm phân tích" },
-  { id: "creative", label: "Nhóm sáng tạo" },
-  { id: "social", label: "Nhóm xã hội" },
-  { id: "organizer", label: "Nhóm tổ chức" },
-  { id: "origin", label: "Nhóm khởi nguồn" },
-];
+export const PERSONALITY_GROUPS = [
+  { id: "mbti", label: "Nhóm MBTI" },
+  { id: "origin", label: "Nhóm RIASEC" },
+] as const;
 
 export const PERSONALITIES: PersonalityType[] = [
   {
