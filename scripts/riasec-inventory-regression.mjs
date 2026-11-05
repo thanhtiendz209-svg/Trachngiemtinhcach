@@ -208,8 +208,8 @@ try {
         assert.deepEqual(result.riasec.maxScores, { R: 50, I: 50, A: 50, S: 50, E: 50, C: 50 });
         assert.equal(result.riasec.code, "ARI");
         assert.equal(await stored(page), null);
-        await visible(page.getByRole("heading", { name: "Mã RIASEC: ARI", exact: true }));
-        await capture(page, `result-${viewportName}`, page.getByRole("heading", { name: "Mã RIASEC: ARI", exact: true }));
+        await visible(page.getByRole("heading", { name: "Mã RIASEC: ARI", exact: true, level: 1 }));
+        await capture(page, `result-${viewportName}`, page.getByRole("heading", { name: "Mã RIASEC: ARI", exact: true, level: 1 }));
         report.results[viewportName] = { scores: oracleScores, maxima: result.riasec.maxScores, code: result.riasec.code, refreshedProgressPreserved: true };
       });
     });
@@ -250,10 +250,10 @@ try {
       if (!explicitMax) delete result.riasec.maxScores;
       await withPage("desktop", { [resultKey]: result, "lumina-last-result": result }, async (page) => {
         await navigate(page, "/ket-qua/riasec");
-        await visible(page.getByRole("heading", { name: "Mã RIASEC: CAR", exact: true }));
+        await visible(page.getByRole("heading", { name: "Mã RIASEC: CAR", exact: true, level: 1 }));
         await visible(page.getByText("18/45", { exact: true }));
         await visible(page.getByText("33/55", { exact: true }));
-        await capture(page, explicitMax ? "legacy-explicit-scale" : "legacy-inferred-scale", page.getByRole("heading", { name: "Mã RIASEC: CAR", exact: true }));
+        await capture(page, explicitMax ? "legacy-explicit-scale" : "legacy-inferred-scale", page.getByRole("heading", { name: "Mã RIASEC: CAR", exact: true, level: 1 }));
         for (const path of ["/ho-so", "/huong-nghiep"]) {
           await navigate(page, path);
           await visible(page.locator("h1"));
