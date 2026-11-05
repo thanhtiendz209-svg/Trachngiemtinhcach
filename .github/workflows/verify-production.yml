@@ -89,6 +89,66 @@ jobs:
             writeFileSync('screenshots/production-readiness.json', JSON.stringify(evidence, null, 2));
           }
           JS
+      - name: Wait for the RIASEC inventory version on the public deployment
+        if: ${{ hashFiles('scripts/riasec-inventory-regression.mjs') != '' }}
+        working-directory: /workspace
+        timeout-minutes: 4
+        run: |
+          node --input-type=module <<'JS' 2>&1 | tee screenshots/production-riasec-inventory-readiness.log
+          import { writeFileSync } from 'node:fs';
+          import { setTimeout as pause } from 'node:timers/promises';
+
+          const url = 'https://trachnghiemtinhcach.vercel.app/trac-nghiem/riasec';
+          const expectedVersion = 'riasec-60-v2';
+          const deadline = Date.now() + 3 * 60 * 1000;
+          const evidence = { ok: false, url, expectedVersion, revision: process.env.GITHUB_SHA, attempts: [] };
+          function inventoryVersion(html) {
+            const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? html;
+            for (const [tag] of head.matchAll(/<meta\b[^>]*>/gi)) {
+              const attributes = Object.fromEntries([...tag.matchAll(/([^\s=<>/]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s/>]+))/g)]
+                .map((match) => [match[1].toLowerCase(), match[2] ?? match[3] ?? match[4]]));
+              if (attributes.name?.toLowerCase() === 'riasec-question-set-version') return attributes.content;
+            }
+            return undefined;
+          }
+          try {
+            while (Date.now() < deadline) {
+              const attempt = { checkedAt: new Date().toISOString() };
+              try {
+                const response = await fetch(url, {
+                  signal: AbortSignal.timeout(10000),
+                  headers: { 'Cache-Control': 'no-cache' },
+                  cache: 'no-store',
+                });
+                attempt.status = response.status;
+                attempt.vercelId = response.headers.get('x-vercel-id');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                attempt.version = inventoryVersion(await response.text()) ?? null;
+                if (attempt.version !== expectedVersion) throw new Error(`Live RIASEC inventory version is ${attempt.version ?? 'missing'}; waiting for ${expectedVersion}`);
+                evidence.ok = true;
+                evidence.attempts.push(attempt);
+                console.log(`Production RIASEC inventory ${expectedVersion} is ready after ${evidence.attempts.length} attempt(s)`);
+                break;
+              } catch (error) {
+                attempt.error = String(error.message || error);
+                evidence.attempts.push(attempt);
+                console.log(`${attempt.checkedAt}: ${attempt.error}`);
+              }
+              const remaining = deadline - Date.now();
+              if (remaining > 0) await pause(Math.min(10000, remaining));
+            }
+            if (!evidence.ok) throw new Error('The production RIASEC inventory version did not appear within three minutes');
+          } finally {
+            writeFileSync('screenshots/production-riasec-inventory-readiness.json', JSON.stringify(evidence, null, 2));
+          }
+          JS
+      - name: Exercise the live RIASEC inventory, resume and scoring flows
+        if: ${{ hashFiles('scripts/riasec-inventory-regression.mjs') != '' }}
+        working-directory: /workspace
+        env:
+          BROWSER_ALLOW_EXTERNAL_HOST: '1'
+          SITE_REVISION: production-${{ github.sha }}
+        run: node scripts/riasec-inventory-regression.mjs https://trachnghiemtinhcach.vercel.app/ 2>&1 | tee screenshots/riasec-inventory-regression.log
       - name: Exercise live school, career and all three quiz flows
         working-directory: /workspace
         env:

@@ -1,11 +1,10 @@
-/** Official 60-item RIASEC inventory from Bo_60_cau_trac_nghiem_RIASEC-1.docx.
- *
- * Scoring key follows the Word distribution table (not the "10 câu / nhóm" prose).
- * Known contradiction in the source table:
- *   A lists 9 item ids, C lists 11, while the prose says 10 each.
- *   Every item 1–60 appears exactly once. We do not reassign items.
+/** 60-item RIASEC inventory from Bo_60_cau_trac_nghiem_RIASEC_da_sua.docx.
+ * The revised source assigns question 37 to A: all six groups have 10 items.
+ * Each response scores 1–5; each group ranges from 10 to 50 points.
  */
 import type { Question } from "./types";
+
+export const RIASEC_QUESTION_SET_VERSION = "riasec-60-v2";
 
 export const RIASEC_LIKERT_LABELS = [
   "Hoàn toàn không thích",
@@ -21,25 +20,25 @@ export const RIASEC_LIKERT: Question["options"] = RIASEC_LIKERT_LABELS.map((labe
 }));
 
 export const RIASEC_ITEM_GROUP: Record<number, "R" | "I" | "A" | "S" | "E" | "C"> = {
-  1: "R", 2: "S", 3: "C", 4: "E", 5: "I", 6: "A", 7: "C", 8: "R", 9: "E", 10: "I", 11: "S", 12: "A", 13: "R", 14: "C", 15: "I", 16: "E", 17: "A", 18: "S", 19: "C", 20: "R", 21: "I", 22: "A", 23: "S", 24: "E", 25: "C", 26: "R", 27: "I", 28: "A", 29: "E", 30: "S", 31: "C", 32: "I", 33: "R", 34: "S", 35: "E", 36: "A", 37: "C", 38: "R", 39: "I", 40: "E", 41: "S", 42: "A", 43: "C", 44: "R", 45: "I", 46: "S", 47: "E", 48: "A", 49: "C", 50: "R", 51: "I", 52: "A", 53: "S", 54: "E", 55: "C", 56: "R", 57: "I", 58: "S", 59: "E", 60: "C"
+  1: "R", 2: "S", 3: "C", 4: "E", 5: "I", 6: "A", 7: "C", 8: "R", 9: "E", 10: "I", 11: "S", 12: "A", 13: "R", 14: "C", 15: "I", 16: "E", 17: "A", 18: "S", 19: "C", 20: "R", 21: "I", 22: "A", 23: "S", 24: "E", 25: "C", 26: "R", 27: "I", 28: "A", 29: "E", 30: "S", 31: "C", 32: "I", 33: "R", 34: "S", 35: "E", 36: "A", 37: "A", 38: "R", 39: "I", 40: "E", 41: "S", 42: "A", 43: "C", 44: "R", 45: "I", 46: "S", 47: "E", 48: "A", 49: "C", 50: "R", 51: "I", 52: "A", 53: "S", 54: "E", 55: "C", 56: "R", 57: "I", 58: "S", 59: "E", 60: "C"
 };
 
 export const RIASEC_GROUP_ITEMS = {
   R: [1, 8, 13, 20, 26, 33, 38, 44, 50, 56],
   I: [5, 10, 15, 21, 27, 32, 39, 45, 51, 57],
-  A: [6, 12, 17, 22, 28, 36, 42, 48, 52],
+  A: [6, 12, 17, 22, 28, 36, 37, 42, 48, 52],
   S: [2, 11, 18, 23, 30, 34, 41, 46, 53, 58],
   E: [4, 9, 16, 24, 29, 35, 40, 47, 54, 59],
-  C: [3, 7, 14, 19, 25, 31, 37, 43, 49, 55, 60],
+  C: [3, 7, 14, 19, 25, 31, 43, 49, 55, 60],
 } as const;
 
 export const RIASEC_GROUP_MAX: Record<"R" | "I" | "A" | "S" | "E" | "C", number> = {
   R: 50,
   I: 50,
-  A: 45,
+  A: 50,
   S: 50,
   E: 50,
-  C: 55,
+  C: 50,
 };
 
 export interface RiasecQuestion extends Question {
@@ -265,8 +264,8 @@ export const RIASEC_QUESTIONS: RiasecQuestion[] = [
   },
   {
     id: "r37",
-    text: "Tôi thường để ý những chi tiết nhỏ mà người khác có thể bỏ qua.",
-    group: "C" as const,
+    text: "Tôi thích thử nghiệm những cách thể hiện khác nhau để tạo ra sản phẩm mang dấu ấn riêng.",
+    group: "A" as const,
     options: RIASEC_LIKERT,
   },
   {

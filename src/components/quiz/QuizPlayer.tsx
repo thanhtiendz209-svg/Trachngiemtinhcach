@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Logo } from "@/components/layout/Logo";
 import { Button } from "@/components/ui/button";
 import { questionsFor } from "@/data/questions";
+import { RIASEC_QUESTION_SET_VERSION } from "@/data/riasec-questions";
 import type { QuizMeta, QuizResult } from "@/data/types";
 import { scoreQuiz } from "@/lib/quiz-engine";
+import { prepareQuizProgress } from "@/lib/quiz-progress";
 import { clearProgress, loadProgress, loadResult, saveProgress, saveResult } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import { AnalysisScreen } from "./AnalysisScreen";
@@ -20,6 +22,7 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
   const [phase, setPhase] = useState<"gate" | "intro" | "quiz" | "analyzing">("quiz");
   const [savedResult, setSavedResult] = useState<QuizResult | null>(null);
   const [error, setError] = useState("");
+  const [updatedQuestion, setUpdatedQuestion] = useState<number>();
   const [animKey, setAnimKey] = useState(0);
   const autoRef = useRef<number>(0);
   const indexRef = useRef(0);
@@ -29,8 +32,10 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
   }, [index]);
 
   useEffect(() => {
-    const saved = loadProgress(quiz.id);
+    const prepared = prepareQuizProgress(loadProgress(quiz.id));
+    const saved = prepared.progress;
     const existing = loadResult(quiz.id);
+    setUpdatedQuestion(prepared.updatedQuestion);
     setSavedResult(existing);
     const partial = Boolean(saved && saved.answers.length === questions.length && saved.answers.some((a) => a >= 0));
     if (partial && saved) {
@@ -57,8 +62,9 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
       index,
       answers,
       updatedAt: new Date().toISOString(),
+      ...(quiz.kind === "riasec" ? { questionSetVersion: RIASEC_QUESTION_SET_VERSION } : {}),
     });
-  }, [answers, index, quiz.id, ready, phase]);
+  }, [answers, index, quiz.id, quiz.kind, ready, phase]);
 
   const q = questions[index];
   const selected = answers[index] ?? -1;
@@ -98,18 +104,31 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
       return;
     }
     if (last) {
+      const unanswered = questions.findIndex((question, i) => !question.options[answers[i] ?? -1]);
+      if (unanswered >= 0) {
+        go(unanswered, "back");
+        setError("Hãy trả lời đầy đủ các câu hỏi trước khi xem kết quả.");
+        return;
+      }
       setPhase("analyzing");
       return;
     }
     go(index + 1, "next");
-  }, [answers, go, index, last]);
+  }, [answers, go, index, last, questions]);
 
   const finish = useCallback(() => {
+    const unanswered = questions.findIndex((question, i) => !question.options[answers[i] ?? -1]);
+    if (unanswered >= 0) {
+      go(unanswered, "back");
+      setError("Hãy trả lời đầy đủ các câu hỏi trước khi xem kết quả.");
+      setPhase("quiz");
+      return;
+    }
     const result = scoreQuiz(quiz.id, answers);
     if (!result) return;
     saveResult(result);
     void navigate({ to: "/ket-qua/$quizId", params: { quizId: quiz.id } });
-  }, [answers, navigate, quiz.id]);
+  }, [answers, go, navigate, questions, quiz.id]);
 
   const startFresh = () => {
     window.clearTimeout(autoRef.current);
@@ -120,6 +139,7 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
     setDir("next");
     setPhase("intro");
     setError("");
+    setUpdatedQuestion(undefined);
   };
 
   useEffect(() => {
@@ -183,6 +203,11 @@ export function QuizPlayer({ quiz }: { quiz: QuizMeta }) {
                 ? `Bạn đang ở câu ${String(Math.min(index + 1, questions.length)).padStart(2, "0")} / ${questions.length}. Câu trả lời trước đó vẫn được giữ.`
                 : "Làm lại sẽ tạo hồ sơ mới trên thiết bị này. Hồ sơ cũ vẫn xem được cho đến khi bạn hoàn thành bài mới."}
             </p>
+            {updatedQuestion === 37 ? (
+              <p role="status" className="mt-3 rounded-xl bg-ice px-4 py-3 text-sm text-navy">
+                Câu 37 đã cập nhật. Bạn cần trả lời lại câu này; các câu khác được giữ.
+              </p>
+            ) : null}
             <div className="mt-6 flex flex-col gap-2">
               {resuming ? (
                 <Button onClick={() => setPhase("quiz")} className="w-full">

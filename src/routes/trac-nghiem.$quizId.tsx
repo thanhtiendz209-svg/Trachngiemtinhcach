@@ -3,8 +3,14 @@ import { SiteShell } from "@/components/layout/SiteShell";
 import { QuizPlayer } from "@/components/quiz/QuizPlayer";
 import { Button } from "@/components/ui/button";
 import { getQuiz } from "@/data/quizzes";
+import { RIASEC_QUESTION_SET_VERSION } from "@/data/riasec-questions";
 
 export const Route = createFileRoute("/trac-nghiem/$quizId")({
+  head: ({ params }) => ({
+    meta: params.quizId === "riasec"
+      ? [{ name: "riasec-question-set-version", content: RIASEC_QUESTION_SET_VERSION }]
+      : [],
+  }),
   component: QuizRoute,
 });
 

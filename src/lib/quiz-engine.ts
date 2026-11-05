@@ -2,7 +2,7 @@ import { getPersonality } from "@/data/personalities";
 import { questionsFor } from "@/data/questions";
 import { getQuiz } from "@/data/quizzes";
 import { RIASEC_MAP } from "@/data/riasec";
-import { RIASEC_GROUP_MAX } from "@/data/riasec-questions";
+import { RIASEC_GROUP_MAX, RIASEC_QUESTION_SET_VERSION } from "@/data/riasec-questions";
 import type { Question, QuizResult } from "@/data/types";
 import { riasecFromScores } from "./riasec";
 import { pct } from "./utils";
@@ -53,7 +53,7 @@ export function scoreQuiz(quizId: string, answers: number[]): QuizResult | null 
     return { ...base, mbti: m.type, axes: m.axes };
   }
   if (quiz.kind === "riasec") {
-    return { ...base, riasec: riasecFromScores(scores, false, RIASEC_GROUP_MAX) };
+    return { ...base, questionSetVersion: RIASEC_QUESTION_SET_VERSION, riasec: riasecFromScores(scores, false, RIASEC_GROUP_MAX) };
   }
   if (quiz.kind === "bigfive") {
     return { ...base, bigfive: bigfiveFromScores(scores) };

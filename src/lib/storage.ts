@@ -1,6 +1,7 @@
 import { QUIZZES } from "@/data/quizzes";
 import type { QuizProgress, QuizResult } from "@/data/types";
 import { mergeQuizResults } from "./career-profile";
+import { prepareQuizProgress, preserveStoredRiasecScale } from "./quiz-progress";
 
 const PROGRESS = (id: string) => `lumina-progress-${id}`;
 const RESULT = (id: string) => `lumina-result-${id}`;
@@ -61,7 +62,7 @@ export function clearProgress(quizId: string) {
 }
 
 export function loadResult(quizId: string) {
-  return read<QuizResult>(RESULT(quizId));
+  return preserveStoredRiasecScale(read<QuizResult>(RESULT(quizId)));
 }
 
 export function saveResult(result: QuizResult) {
@@ -73,12 +74,12 @@ export function saveResult(result: QuizResult) {
 
 export function loadLastResult() {
   cleanRetiredQuizData();
-  const last = read<QuizResult>(LAST);
+  const last = preserveStoredRiasecScale(read<QuizResult>(LAST));
   return last && QUIZZES.some((quiz) => quiz.id === last.quizId) ? last : null;
 }
 
 export function hasPartialProgress(quizId: string) {
-  const p = loadProgress(quizId);
+  const p = prepareQuizProgress(loadProgress(quizId)).progress;
   if (!p) return false;
   return p.answers.some((a) => a >= 0);
 }

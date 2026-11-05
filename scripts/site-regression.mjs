@@ -775,6 +775,7 @@ try {
       await page.evaluate(({ id, size }) => {
         localStorage.setItem(`lumina-progress-${id}`, JSON.stringify({
           quizId: id,
+          ...(id === "riasec" ? { questionSetVersion: "riasec-60-v2" } : {}),
           index: size - 1,
           answers: Array(size).fill(0),
           updatedAt: "2026-01-01T00:00:00.000Z",

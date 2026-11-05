@@ -81,6 +81,7 @@ export interface RiasecScores {
 export interface QuizResult {
   quizId: string;
   kind: QuizKind;
+  questionSetVersion?: string;
   completedAt: string;
   mbti?: string;
   axes?: {
@@ -96,6 +97,7 @@ export interface QuizResult {
 
 export interface QuizProgress {
   quizId: string;
+  questionSetVersion?: string;
   index: number;
   answers: number[];
   updatedAt: string;
