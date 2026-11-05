@@ -19,7 +19,7 @@ assert.equal(source.version, version);
 assert.equal(source.questions.length, 60);
 assert.equal(source.questions[36].text, revisedQuestion);
 assert.equal(source.questions[36].group, "A");
-const report = { revision: process.env.SITE_REVISION || "local", target: origin, version, checks: [], results: {}, pageErrors: [], consoleErrors: [] };
+const report = { revision: process.env.SITE_REVISION || "local", target: origin, version, checks: [], results: {}, pageErrors: [], consoleErrors: [], externalFaviconErrors: [] };
 mkdirSync(out, { recursive: true });
 let browser;
 let activePage;
@@ -119,7 +119,19 @@ async function withPage(viewportName, initial, run) {
   activePage = page;
   page.setDefaultTimeout(15000);
   page.on("pageerror", (error) => report.pageErrors.push(String(error)));
-  page.on("console", (message) => { if (message.type() === "error") report.consoleErrors.push({ text: message.text(), url: message.location().url }); });
+  page.on("console", (message) => {
+    if (message.type() !== "error") return;
+    const entry = { text: message.text(), url: message.location().url };
+    // The existing school cards replace unavailable Google favicons with
+    // initials. Record those provider 404s without masking application errors.
+    let externalFavicon404 = false;
+    try {
+      const url = new URL(entry.url);
+      externalFavicon404 = /^t[0-3]\.gstatic\.com$/.test(url.hostname)
+        && url.pathname === "/faviconV2" && /server responded with a status of 404/.test(entry.text);
+    } catch { /* A console message need not contain a URL. */ }
+    (externalFavicon404 ? report.externalFaviconErrors : report.consoleErrors).push(entry);
+  });
   try {
     await run(page);
   } catch (error) {
