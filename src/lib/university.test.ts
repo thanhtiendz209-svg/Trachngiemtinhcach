@@ -61,7 +61,6 @@ const baselines: Baseline[] = [
   {"name":"ranked major","options":{"riasec":{"code":"RIC","scores":{"R":45,"I":40,"A":10,"S":15,"E":20,"C":35},"maxScores":{"R":50,"I":50,"A":50,"S":50,"E":50,"C":50}},"major":"Công nghệ thông tin"},"count":56,"firstIds":["uni-016","uni-044","uni-012"],"digest":"77179842c6fe4c6d490e4db6abaa8a4ebcda848473cddf243da2c185b08a1024"},
   {"name":"fit without scores","options":{"fitMin":"≥60%"},"count":0,"firstIds":[],"digest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
   {"name":"disabled tuition and score filters","options":{"tuition":"Dưới 20 triệu","score":"Trên 27"},"count":126,"firstIds":["uni-001","uni-024","uni-016"],"digest":"6f82aa7687b5837c87961dfca47d87f7309eb5d5897312d8eca750ff91a68796"},
-  {"name":"unavailable tuition filter","options":{"applyTuition":true,"tuition":"Dưới 20 triệu"},"count":0,"firstIds":[],"digest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
   {"name":"published score filter","options":{"applyScore":true,"score":"Trên 27"},"count":21,"firstIds":["uni-001","uni-002","uni-012"],"digest":"be92b5aa307ecf9b64d49273a06838300772baf7c36c31951f830ca1ebded45b"},
   {"name":"admission method","options":{"applyMethod":true,"method":"THPT"},"count":0,"firstIds":[],"digest":"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"},
 ];
@@ -227,5 +226,20 @@ describe("published THPT admission score filtering", () => {
     assert.deepEqual(ids([uni], "Trên 27"), []);
     assert.deepEqual(ids([uni], "Trên 27", false), ["missing"]);
     assert.deepEqual(ids([uni], "Tất cả"), ["missing"]);
+  });
+});
+
+
+describe("school tuition workbook integration", () => {
+  it("matches the 126 university admission sheets, including corrected DTU data", async () => {
+    const { getSchoolTuition, TUITION_SCHOOL_COUNT } = await import("../data/school-tuition-2026.ts");
+    assert.equal(TUITION_SCHOOL_COUNT, 126);
+    for (const uni of UNIVERSITIES) assert.ok(getSchoolTuition(uni), `Missing tuition for ${uni.name}`);
+    const dtu = UNIVERSITIES.find((uni) => uni.admissions2026?.sheet === "DTU");
+    assert.ok(dtu);
+    assert.deepEqual(getSchoolTuition(dtu), { min: 27000000, max: 94000000, credit: null, median: null });
+    const neu = UNIVERSITIES.find((uni) => uni.admissions2026?.sheet === "NEU");
+    assert.ok(neu);
+    assert.equal(getSchoolTuition(neu)?.credit, 880000);
   });
 });

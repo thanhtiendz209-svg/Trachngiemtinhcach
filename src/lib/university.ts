@@ -1,4 +1,5 @@
 import { MAJOR_GROUPS } from "@/data/majors";
+import { getSchoolTuition } from "@/data/school-tuition-2026";
 import type { RiasecScores, University, UniversityLocation } from "@/data/types";
 import { riasecFitPercent } from "@/lib/riasec";
 
@@ -150,8 +151,13 @@ function tuitionRanges(uni: University): Array<[number, number]> {
     if (program.tuitionMin == null || program.tuitionMax == null) continue;
     ranges.push([program.tuitionMin, program.tuitionMax]);
   }
-  if (!ranges.length && uni.tuition?.amount != null) {
-    ranges.push([uni.tuition.amount, uni.tuition.amount]);
+  if (!ranges.length) {
+    const schoolTuition = getSchoolTuition(uni);
+    if (schoolTuition?.min != null && schoolTuition.max != null) {
+      ranges.push([schoolTuition.min / 1_000_000, schoolTuition.max / 1_000_000]);
+    } else if (uni.tuition?.amount != null) {
+      ranges.push([uni.tuition.amount, uni.tuition.amount]);
+    }
   }
   return ranges;
 }

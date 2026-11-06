@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { MAJOR_GROUPS } from "@/data/majors";
 import { UNIVERSITIES } from "@/data/universities";
+import { getSchoolTuition } from "@/data/school-tuition-2026";
 import type { RiasecScores } from "@/data/types";
 import { MISSING_DATA } from "@/lib/riasec";
 import {
@@ -78,7 +79,7 @@ export function UniversityExplorer({
 
   const { hasTuition, hasScores, methods } = useMemo(
     () => ({
-      hasTuition: UNIVERSITIES.some((u) => u.tuition),
+      hasTuition: UNIVERSITIES.some((u) => getSchoolTuition(u) !== null),
       hasScores: UNIVERSITIES.some((u) =>
         (u.admissions2026?.thptValues.length ?? 0) > 0 ||
         u.programs.some((program) => program.thptValue != null && Number.isFinite(program.thptValue) && program.thptValue >= 0 && program.thptValue <= 30),
