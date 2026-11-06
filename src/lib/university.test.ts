@@ -241,5 +241,11 @@ describe("school tuition workbook integration", () => {
     const neu = UNIVERSITIES.find((uni) => uni.admissions2026?.sheet === "NEU");
     assert.ok(neu);
     assert.equal(getSchoolTuition(neu)?.credit, 880000);
+    const military = UNIVERSITIES.find((uni) => uni.admissions2026?.sheet === "HV An ninh ND");
+    assert.ok(military);
+    assert.deepEqual(getSchoolTuition(military), { min: null, max: null, credit: null, median: null });
+    const onlyCredit = UNIVERSITIES.find((uni) => uni.admissions2026?.sheet === "TLU");
+    assert.ok(onlyCredit);
+    assert.deepEqual(getSchoolTuition(onlyCredit), { min: null, max: null, credit: 530000, median: null });
   });
 });

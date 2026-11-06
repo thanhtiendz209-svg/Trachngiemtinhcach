@@ -132,7 +132,7 @@ export const UniversityCard = memo(function UniversityCard({
             <span className="text-muted">{scores[0] ? `${scores[0].year ?? "Chưa rõ năm"}: ${scores[0].score}` : MISSING_DATA}</span>
           </p>
         )}
-        <UniversityTuitionInfo tuition={tuition} />
+        <UniversityTuitionInfo tuition={tuition} compact />
         {uni.admissionMethods.length ? (
           <p>
             <span className="font-medium text-navy">Phương thức: </span>

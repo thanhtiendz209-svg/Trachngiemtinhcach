@@ -4,7 +4,7 @@ import type { University } from "./types";
  * Dữ liệu: 126_truong_va_nganh_ke_hoach_hoc_phi.xlsm.
  * DTU: đã sửa thứ tự thấp nhất 27 triệu, cao nhất 94 triệu theo yêu cầu.
  * Mỗi mục: [thấp nhất/năm, cao nhất/năm, trung bình/tín chỉ, Q2 trung vị/năm].
- * null = không có dữ liệu, không được tự suy diễn.
+ * null = không có dữ liệu, không được tự suy diễn. Số 0 trong file nguồn không đủ để kết luận miễn học phí: hiển thị là thiếu dữ liệu.
  */
 export type TuitionTuple = readonly [number | null, number | null, number | null, number | null];
 const TUITION_BY_SHEET: Record<string, TuitionTuple> = {
@@ -773,10 +773,15 @@ export interface SchoolTuition {
   median: number | null;
 }
 
+/** Chỉ hiển thị số tiền được nhập rõ ràng (> 0); số 0/không hợp lệ là dữ liệu thiếu. */
+function cleanMoney(value: number | null): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
 export function getSchoolTuition(university: Pick<University, "admissions2026">): SchoolTuition | null {
   const tuple = TUITION_BY_SHEET[university.admissions2026?.sheet ?? ""];
   if (!tuple) return null;
-  return { min: tuple[0], max: tuple[1], credit: tuple[2], median: tuple[3] };
+  return { min: cleanMoney(tuple[0]), max: cleanMoney(tuple[1]), credit: cleanMoney(tuple[2]), median: cleanMoney(tuple[3]) };
 }
 
 export const TUITION_SCHOOL_COUNT = Object.keys(TUITION_BY_SHEET).length;

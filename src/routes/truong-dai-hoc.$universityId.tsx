@@ -37,7 +37,7 @@ function UniversityPage() {
           <Link to="/truong-dai-hoc" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-azure"><ArrowLeft className="size-4" />Tất cả trường</Link>
           <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-azure">{university.region} · {university.provinceNew}</p>
           <h1 className="mt-2 max-w-4xl font-display text-3xl font-semibold leading-snug text-navy sm:text-4xl">{university.name}</h1>
-          <div className="mt-4 rounded-2xl bg-card/80 p-4 shadow-border"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-azure">Học phí 2026–2027 · Chương trình tiêu chuẩn</p><UniversityTuitionInfo tuition={getSchoolTuition(university)} /></div>
+          <div className="mt-4"><UniversityTuitionInfo tuition={getSchoolTuition(university)} /></div>
           <p className="mt-3 max-w-3xl text-muted">Ngành đào tạo và dữ liệu tuyển sinh năm 2026, giữ riêng phương thức, tổ hợp, thang điểm và điều kiện. Nguồn được ghi theo từng ngành để bạn đối chiếu.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             {university.website ? <Button asChild variant="secondary"><a href={university.website} target="_blank" rel="noreferrer">Trang trường<ExternalLink className="size-4" /></a></Button> : null}
